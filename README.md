@@ -1,10 +1,10 @@
-# MCP Modular Architecture - Stage 3: Tools, Resources, and Prompts
+# MCP Modular Architecture - Stage 4: Transport / Communication Layer
 
 This project implements an MCP-based system as part of an academic software architecture assignment, following a structured multi-stage progression as defined in assignment8.
 
-**Current Stage: Stage 3 - Tools, Resources, and Prompts**
+**Current Stage: Stage 4 - Transport / Communication Layer**
 
-This stage adds full support for all three MCP primitives (Tools, Resources, and Prompts), building upon the Stage 2 foundation without modifying the core infrastructure.
+This stage adds a modular transport layer that enables communication with the MCP server while keeping the MCP core completely transport-agnostic.
 
 ## Stage Progression (per assignment8)
 
@@ -32,7 +32,7 @@ Stage 2 adds MCP functionality without modifying Stage 1 infrastructure:
 5. **Tool Execution**: Parameter validation and execution pipeline
 6. **JSON Schemas**: Schema definition and validation for tool inputs/outputs
 
-### Stage 3: Tools, Resources, and Prompts ✅ Current Stage
+### Stage 3: Tools, Resources, and Prompts ✅ Completed
 
 **Goal**: Extend MCP server to support all three MCP primitives.
 
@@ -47,7 +47,20 @@ Stage 3 adds Resources and Prompts while keeping Tools unchanged:
 7. **Example Prompts**: CodeReviewPrompt and SummarizePrompt
 8. **Prompt Message Generation**: Template-based message creation with arguments
 
-**Important**: Stage 3 focuses on all three primitives. Transport layer is in Stage 4. SDK and UI are in Stage 5.
+### Stage 4: Transport / Communication Layer ✅ Current Stage
+
+**Goal**: Add modular transport layer for server communication.
+
+Stage 4 introduces the transport layer while keeping MCP logic transport-agnostic:
+
+1. **Transport Abstraction**: BaseTransport class defining transport interface
+2. **STDIO Transport**: Standard input/output transport implementation
+3. **Transport Handler**: Message routing and protocol translation
+4. **JSON-RPC Style Protocol**: Request/response message format
+5. **Complete Decoupling**: MCP server has no knowledge of transport mechanism
+6. **Replaceable Transport**: Ability to swap transports without changing MCP code
+
+**Important**: Stage 4 focuses on the communication layer. SDK and UI are in Stage 5.
 
 ## Project Structure
 
@@ -88,6 +101,11 @@ mcp-modular-architecture/
 │   │   └── schemas/           # JSON schema definitions (Stage 2)
 │   │       └── tool_schemas.py
 │   │
+│   ├── transport/              # Transport Layer (Stage 4) **NEW**
+│   │   ├── base_transport.py  # Abstract base transport
+│   │   ├── stdio_transport.py # STDIO transport implementation
+│   │   └── transport_handler.py # Message routing and protocol
+│   │
 │   ├── models/                 # Domain models (Illustrative - Stage 1)
 │   │   ├── base_model.py
 │   │   └── resource.py
@@ -116,6 +134,9 @@ mcp-modular-architecture/
 │   │   └── prompts/           # Stage 3 tests **NEW**
 │   │       ├── test_code_review_prompt.py
 │   │       └── test_summarize_prompt.py
+│   ├── transport/              # Stage 4 tests **NEW**
+│   │   ├── test_stdio_transport.py
+│   │   └── test_transport_handler.py
 │   ├── models/
 │   ├── services/
 │   └── utils/
@@ -334,6 +355,66 @@ In subsequent stages, when the actual MCP-based domain is defined, these placeho
   - Demonstrates simpler prompt structure
   - Template-based message construction
 
+## Stage 4: Transport Layer Components
+
+### Base Transport (`src/transport/base_transport.py`)
+
+- **BaseTransport**: Abstract base class for all transport implementations (Stage 4)
+  - Defines transport interface contract
+  - Message transmission and reception abstraction
+  - Message handler callback mechanism
+  - Transport lifecycle management (start/stop)
+  - Completely independent of MCP logic
+  - All concrete transports must inherit from BaseTransport
+
+### STDIO Transport (`src/transport/stdio_transport.py`)
+
+- **STDIOTransport**: Standard input/output transport (Stage 4)
+  - Communicates via stdin and stdout
+  - Newline-delimited JSON messages
+  - Non-blocking message reception
+  - Automatic JSON serialization/deserialization
+  - Server loop for continuous message processing
+  - Recommended transport for MCP servers
+
+### Transport Handler (`src/transport/transport_handler.py`)
+
+- **TransportHandler**: Bridges transport and MCP server (Stage 4)
+  - Translates transport messages to MCP operations
+  - JSON-RPC style message protocol
+  - Method routing (server.*, tool.*, resource.*, prompt.*)
+  - Request/response formatting
+  - Error handling and response generation
+  - Keeps transport and MCP completely decoupled
+
+### Transport Architecture
+
+The transport layer is designed with complete separation from MCP logic:
+
+**Key Principles:**
+1. **Abstraction**: BaseTransport defines the contract
+2. **Independence**: Transport has no knowledge of MCP primitives
+3. **Adaptability**: TransportHandler translates between layers
+4. **Replaceability**: Swap transports without changing MCP code
+5. **Extensibility**: Add new transports (HTTP, SSE, WebSocket) easily
+
+**Message Flow:**
+```
+Client → Transport (STDIO) → TransportHandler → MCP Server → Response
+        ↑                                                         ↓
+        ←─────────────────────────────────────────────────────────┘
+```
+
+**Supported Methods:**
+- `server.info`: Get server information
+- `server.initialize`: Initialize server
+- `tool.list`: List available tools
+- `tool.execute`: Execute a tool
+- `resource.list`: List available resources
+- `resource.read`: Read a resource
+- `prompt.list`: List available prompts
+- `prompt.get_messages`: Get prompt messages
+
 ## Setup and Installation
 
 ### Prerequisites
@@ -520,24 +601,37 @@ This implementation follows key software architecture principles (as required by
 5. **SOLID Principles**: Especially evident in the base model abstraction and error hierarchy
 6. **Configuration Over Code**: All configurable values in YAML files, not hard-coded
 
-## Stage 2-3 Architectural Highlights
+## Stage 2-4 Architectural Highlights
 
-### How Stage 3 Builds on Stages 1-2
+### How Stage 4 Builds on Stages 1-3
 
 1. **Zero Modification to Core**: Stage 1 infrastructure (`src/core/`) remains untouched
-2. **Minimal Changes to Stage 2**: Only the MCP server was updated; existing tools unchanged
-3. **Modular Addition**: Resources and Prompts are independent modules within MCP layer
-4. **Seamless Integration**: All components consume Stage 1 services (config, logging, errors)
-5. **No Hard-coded Values**: All configuration in `config/base.yaml`
-6. **Complete Test Coverage**: 46 new tests added for Stage 3 (122 tests total, all passing)
-7. **Consistent Patterns**: Resources and Prompts follow same patterns as Tools (base class, registry, examples)
+2. **Zero Modification to MCP**: MCP server and primitives completely unchanged
+3. **Complete Decoupling**: Transport layer has no knowledge of MCP internals
+4. **Adapter Pattern**: TransportHandler bridges transport and MCP without coupling
+5. **Seamless Integration**: Transport uses Stage 1 services (config, logging, errors)
+6. **No Hard-coded Values**: All configuration in `config/base.yaml`
+7. **Complete Test Coverage**: 25 new tests added for Stage 4 (147 tests total, all passing)
+8. **Consistent Patterns**: Transport follows same patterns as other layers (base class, implementation)
 
-### What Stage 3 Does NOT Include (per assignment8)
+### What Stage 4 Demonstrates
 
-- **No Transport Layer**: HTTP/SSE/STDIO are in Stage 4
+**Transport Abstraction Benefits:**
+- Swap STDIO for HTTP/SSE/WebSocket without changing MCP code
+- MCP server is completely transport-agnostic
+- Transport implementations are independent and replaceable
+- Message protocol is standardized (JSON-RPC style)
+
+**Clean Architecture:**
+- Each layer communicates through well-defined interfaces
+- No circular dependencies between layers
+- Transport → Handler → MCP Server (one-way dependency flow)
+
+### What Stage 4 Does NOT Include (per assignment8)
+
 - **No SDK**: SDK abstraction is in Stage 5
 - **No UI**: User interface is in Stage 5
-- **No Client-Server Communication**: All primitives are local/in-process
+- **No Client Library**: Client-side SDK comes in Stage 5
 
 ## Next Stages (per assignment8)
 
@@ -545,9 +639,9 @@ This implementation follows key software architecture principles (as required by
 - ✅ **Stage 1: Foundation** - Core infrastructure (config, logging, errors, testing)
 - ✅ **Stage 2: MCP + Tools** - MCP server with tool registry and example tools
 - ✅ **Stage 3: Tools, Resources, and Prompts** - All three MCP primitives with registries and examples
+- ✅ **Stage 4: Transport / Communication Layer** - Modular transport layer with STDIO implementation
 
 **Remaining:**
-- **Stage 4: Transport / Communication Layer** - Add networking (HTTP/SSE/STDIO)
 - **Stage 5: SDK and User Interface** - Client SDK and user-facing interface
 
 Each stage builds upon the previous without breaking existing functionality. The modular architecture enables independent development and testing of each layer.
