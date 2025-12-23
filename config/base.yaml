@@ -2,8 +2,8 @@
 
 app:
   name: "MCP Modular Architecture"
-  version: "1.0.0-stage1"
-  stage: "foundation"
+  version: "1.0.0-stage2"
+  stage: "mcp-tools"
 
 logging:
   level: "INFO"
@@ -20,3 +20,15 @@ error_handling:
   include_traceback: true
   log_errors: true
   raise_on_critical: true
+
+# Stage 2: MCP Server Configuration
+mcp:
+  server:
+    name: "MCP Modular Architecture Server"
+    version: "2.0.0"
+    enabled: true
+  tools:
+    auto_register: true
+    available_tools:
+      - "calculator"
+      - "echo"
