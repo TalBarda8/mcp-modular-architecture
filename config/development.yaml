@@ -1,0 +1,8 @@
+# Development environment configuration
+
+logging:
+  level: "DEBUG"
+
+error_handling:
+  include_traceback: true
+  raise_on_critical: false  # Don't crash in development

@@ -1,0 +1,10 @@
+# Production environment configuration
+
+logging:
+  level: "WARNING"
+  console:
+    enabled: false  # Only log to file in production
+
+error_handling:
+  include_traceback: false  # Don't expose internal details
+  raise_on_critical: true
