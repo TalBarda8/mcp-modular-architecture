@@ -62,6 +62,14 @@ mcp-modular-architecture/
 └── README.md                   # This file
 ```
 
+## Important Note: Illustrative Domain Layer
+
+**The domain entities (`Resource`, `ResourceService`, CRUD operations) are illustrative placeholders only.**
+
+These components exist solely to demonstrate how the core architectural infrastructure (configuration, logging, error handling, testing) works in practice. They do **not** represent the final system domain or chosen business logic.
+
+In subsequent stages, when the actual MCP-based domain is defined, these placeholder entities can be completely replaced or removed without any impact on the core infrastructure layer. The architectural foundation (`src/core/`) is domain-agnostic and designed to support any application built on top of it.
+
 ## Key Components
 
 ### Configuration Layer (`src/core/config/`)
@@ -97,25 +105,27 @@ mcp-modular-architecture/
   - Traceback management
   - Safe execution wrapper
 
-### Domain Models (`src/models/`)
+### Domain Models (`src/models/`) - **Illustrative Only**
 
 - **BaseModel**: Abstract base class with common functionality
   - Validation interface
   - Serialization (to_dict)
   - Timestamp management
 
-- **Resource**: Example concrete model
-  - Demonstrates validation
+- **Resource**: Example concrete model (placeholder)
+  - Demonstrates validation patterns
   - Shows OOP principles
   - Includes business methods
+  - **Can be replaced with actual domain entities in later stages**
 
-### Service Layer (`src/services/`)
+### Service Layer (`src/services/`) - **Illustrative Only**
 
-- **ResourceService**: Example service implementation
-  - CRUD operations
-  - Business logic separation
+- **ResourceService**: Example service implementation (placeholder)
+  - CRUD operations for demonstration
+  - Business logic separation pattern
   - Error handling integration
   - Logging integration
+  - **Can be replaced with actual MCP services in later stages**
 
 ### Utilities (`src/utils/`)
 
@@ -225,12 +235,14 @@ This Stage 1 implementation follows key software architecture principles:
 
 ## Next Stages
 
-This is **Stage 1** of a multi-stage architecture. Future stages will build upon this foundation:
+This is **Stage 1 (Foundation)** of a multi-stage architecture. Future stages will build upon this foundation:
 
-- **Stage 2**: MCP protocol implementation
-- **Stage 3**: Networking and communication layer
-- **Stage 4**: SDK and API development
-- **Stage 5**: User interface components
+- **Stage 2: MCP + Tools** - Implement MCP protocol and tool capabilities
+- **Stage 3: Tools, Resources, and Prompts** - Extend with resources and prompts
+- **Stage 4: Transport / Communication Layer** - Implement networking and transport mechanisms
+- **Stage 5: SDK and User Interface** - Develop SDK and user-facing interface components
+
+The core infrastructure established in Stage 1 (configuration, logging, error handling, testing) will remain unchanged and support all subsequent stages.
 
 ## License
 
