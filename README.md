@@ -1,10 +1,10 @@
-# MCP Modular Architecture - Stage 2: MCP + Tools
+# MCP Modular Architecture - Stage 3: Tools, Resources, and Prompts
 
 This project implements an MCP-based system as part of an academic software architecture assignment, following a structured multi-stage progression as defined in assignment8.
 
-**Current Stage: Stage 2 - MCP + Tools**
+**Current Stage: Stage 3 - Tools, Resources, and Prompts**
 
-This stage adds MCP server functionality with tool support, building upon the Stage 1 foundation without modifying the core infrastructure.
+This stage adds full support for all three MCP primitives (Tools, Resources, and Prompts), building upon the Stage 2 foundation without modifying the core infrastructure.
 
 ## Stage Progression (per assignment8)
 
@@ -19,7 +19,7 @@ Stage 1 established the foundational infrastructure:
 5. **Testing Foundation**: Unit testing infrastructure with example test cases
 6. **Code Quality**: Short, focused files (max ~150 lines) with clear responsibilities
 
-### Stage 2: MCP + Tools ✅ Current Stage
+### Stage 2: MCP + Tools ✅ Completed
 
 **Goal**: Build minimal MCP server with Tools support as a modular layer.
 
@@ -32,7 +32,22 @@ Stage 2 adds MCP functionality without modifying Stage 1 infrastructure:
 5. **Tool Execution**: Parameter validation and execution pipeline
 6. **JSON Schemas**: Schema definition and validation for tool inputs/outputs
 
-**Important**: Stage 2 focuses ONLY on Tools. Resources and Prompts are in Stage 3. Transport layer is in Stage 4.
+### Stage 3: Tools, Resources, and Prompts ✅ Current Stage
+
+**Goal**: Extend MCP server to support all three MCP primitives.
+
+Stage 3 adds Resources and Prompts while keeping Tools unchanged:
+
+1. **Resource Abstraction**: Base class for all resources with static/dynamic support
+2. **Resource Registry**: Centralized resource registration and discovery
+3. **Example Resources**: ConfigResource (static) and StatusResource (dynamic)
+4. **Resource Read Interface**: URI-based resource access
+5. **Prompt Abstraction**: Base class for prompts with argument validation
+6. **Prompt Registry**: Centralized prompt registration and discovery
+7. **Example Prompts**: CodeReviewPrompt and SummarizePrompt
+8. **Prompt Message Generation**: Template-based message creation with arguments
+
+**Important**: Stage 3 focuses on all three primitives. Transport layer is in Stage 4. SDK and UI are in Stage 5.
 
 ## Project Structure
 
@@ -53,14 +68,24 @@ mcp-modular-architecture/
 │   │       ├── exceptions.py
 │   │       └── error_handler.py
 │   │
-│   ├── mcp/                    # MCP Layer (Stage 2) **NEW**
-│   │   ├── server.py          # MCP server bootstrap
-│   │   ├── tool_registry.py   # Tool registry
-│   │   ├── tools/             # Tool implementations
+│   ├── mcp/                    # MCP Layer (Stages 2-3)
+│   │   ├── server.py          # MCP server (updated for Stage 3)
+│   │   ├── tool_registry.py   # Tool registry (Stage 2)
+│   │   ├── resource_registry.py  # Resource registry (Stage 3) **NEW**
+│   │   ├── prompt_registry.py    # Prompt registry (Stage 3) **NEW**
+│   │   ├── tools/             # Tool implementations (Stage 2)
 │   │   │   ├── base_tool.py   # Abstract base tool
 │   │   │   ├── calculator_tool.py
 │   │   │   └── echo_tool.py
-│   │   └── schemas/           # JSON schema definitions
+│   │   ├── resources/         # Resource implementations (Stage 3) **NEW**
+│   │   │   ├── base_resource.py   # Abstract base resource
+│   │   │   ├── config_resource.py # Static resource example
+│   │   │   └── status_resource.py # Dynamic resource example
+│   │   ├── prompts/           # Prompt implementations (Stage 3) **NEW**
+│   │   │   ├── base_prompt.py     # Abstract base prompt
+│   │   │   ├── code_review_prompt.py
+│   │   │   └── summarize_prompt.py
+│   │   └── schemas/           # JSON schema definitions (Stage 2)
 │   │       └── tool_schemas.py
 │   │
 │   ├── models/                 # Domain models (Illustrative - Stage 1)
@@ -77,12 +102,20 @@ mcp-modular-architecture/
 │   ├── core/                  # Stage 1 tests
 │   │   ├── config/
 │   │   └── errors/
-│   ├── mcp/                   # Stage 2 tests **NEW**
-│   │   ├── test_server.py
-│   │   ├── test_tool_registry.py
-│   │   └── tools/
-│   │       ├── test_calculator_tool.py
-│   │       └── test_echo_tool.py
+│   ├── mcp/                   # Stage 2-3 tests
+│   │   ├── test_server.py     # Updated for Stage 3
+│   │   ├── test_tool_registry.py  # Stage 2
+│   │   ├── test_resource_registry.py  # Stage 3 **NEW**
+│   │   ├── test_prompt_registry.py    # Stage 3 **NEW**
+│   │   ├── tools/             # Stage 2 tests
+│   │   │   ├── test_calculator_tool.py
+│   │   │   └── test_echo_tool.py
+│   │   ├── resources/         # Stage 3 tests **NEW**
+│   │   │   ├── test_config_resource.py
+│   │   │   └── test_status_resource.py
+│   │   └── prompts/           # Stage 3 tests **NEW**
+│   │       ├── test_code_review_prompt.py
+│   │       └── test_summarize_prompt.py
 │   ├── models/
 │   ├── services/
 │   └── utils/
@@ -167,19 +200,21 @@ In subsequent stages, when the actual MCP-based domain is defined, these placeho
   - Range checking
   - Dictionary key validation
 
-## Stage 2: MCP Layer Components
+## Stage 2-3: MCP Layer Components
 
 ### MCP Server (`src/mcp/server.py`)
 
-- **MCPServer**: Minimal MCP server bootstrap
+- **MCPServer**: MCP server with full primitive support
   - Server initialization and lifecycle management
-  - Tool registration interface
+  - Tool, Resource, and Prompt registration interfaces
   - Tool execution pipeline
+  - Resource read interface
+  - Prompt message generation interface
   - Uses ConfigManager for server configuration
   - Uses Logger for all server operations
   - Uses ErrorHandler for robust error handling
   - **No hard-coded values** - all configuration from YAML
-  - **Stage 2 capabilities**: Tools only (no Resources/Prompts yet)
+  - **Stage 3 capabilities**: Tools, Resources, and Prompts
 
 ### Tool Registry (`src/mcp/tool_registry.py`)
 
@@ -225,6 +260,79 @@ In subsequent stages, when the actual MCP-based domain is defined, these placeho
   - Demonstrates minimal tool implementation
   - Single parameter handling
   - Baseline for understanding tool architecture
+
+### Resource Registry (`src/mcp/resource_registry.py`)
+
+- **ResourceRegistry**: Centralized resource management (Stage 3)
+  - Singleton pattern for single source of truth
+  - Resource registration and unregistration by URI
+  - Resource discovery by URI
+  - List all available resources
+  - Get resource metadata (name, description, MIME type, dynamic status)
+  - Integrates with logging and error handling
+
+### Resource Abstraction (`src/mcp/resources/base_resource.py`)
+
+- **BaseResource**: Abstract base class for all resources (Stage 3)
+  - Defines resource interface contract
+  - URI-based identification
+  - MIME type support
+  - Dynamic vs. static resource differentiation
+  - read() method returns standardized format
+  - Automatic logging and error handling
+  - All concrete resources must inherit from BaseResource
+
+### Example Resources (Illustrative)
+
+**Note**: These resources are placeholder examples demonstrating the architecture.
+
+- **ConfigResource** (`src/mcp/resources/config_resource.py`)
+  - Static resource providing application configuration
+  - Returns current ConfigManager state
+  - Demonstrates static resource pattern (is_dynamic() returns False)
+  - Content remains consistent across reads
+
+- **StatusResource** (`src/mcp/resources/status_resource.py`)
+  - Dynamic resource providing system status
+  - Returns timestamp and read count
+  - Demonstrates dynamic resource pattern (is_dynamic() returns True)
+  - Content changes with each read
+
+### Prompt Registry (`src/mcp/prompt_registry.py`)
+
+- **PromptRegistry**: Centralized prompt management (Stage 3)
+  - Singleton pattern for single source of truth
+  - Prompt registration and unregistration by name
+  - Prompt discovery by name
+  - List all available prompts
+  - Get prompt metadata (name, description, arguments)
+  - Integrates with logging and error handling
+
+### Prompt Abstraction (`src/mcp/prompts/base_prompt.py`)
+
+- **BasePrompt**: Abstract base class for all prompts (Stage 3)
+  - Defines prompt interface contract
+  - Argument definition with required/optional support
+  - Automatic argument validation
+  - get_messages() returns list of message dicts (role + content)
+  - Template-based message generation
+  - All concrete prompts must inherit from BasePrompt
+
+### Example Prompts (Illustrative)
+
+**Note**: These prompts are placeholder examples demonstrating the architecture.
+
+- **CodeReviewPrompt** (`src/mcp/prompts/code_review_prompt.py`)
+  - Guides model to review code for quality
+  - 3 arguments: code (required), language (optional), focus (optional)
+  - Demonstrates multi-argument prompts
+  - Returns system and user messages
+
+- **SummarizePrompt** (`src/mcp/prompts/summarize_prompt.py`)
+  - Guides model to summarize text
+  - 2 arguments: text (required), length (optional)
+  - Demonstrates simpler prompt structure
+  - Template-based message construction
 
 ## Setup and Installation
 
@@ -315,50 +423,87 @@ resource = service.create_resource(
 logger.info(f"Created resource: {resource.resource_id}")
 ```
 
-### Stage 2: MCP Server with Tools
+### Stage 2-3: MCP Server with Tools, Resources, and Prompts
 
 ```python
 from src.mcp.server import MCPServer
 from src.mcp.tools.calculator_tool import CalculatorTool
 from src.mcp.tools.echo_tool import EchoTool
+from src.mcp.resources.config_resource import ConfigResource
+from src.mcp.resources.status_resource import StatusResource
+from src.mcp.prompts.code_review_prompt import CodeReviewPrompt
+from src.mcp.prompts.summarize_prompt import SummarizePrompt
 
-# Initialize MCP server
+# Initialize MCP server with all three primitives
 server = MCPServer()
 
-# Register tools
+# Create instances
 calculator = CalculatorTool()
 echo = EchoTool()
+config_resource = ConfigResource()
+status_resource = StatusResource()
+code_review_prompt = CodeReviewPrompt()
+summarize_prompt = SummarizePrompt()
 
-server.initialize(tools=[calculator, echo])
+server.initialize(
+    tools=[calculator, echo],
+    resources=[config_resource, status_resource],
+    prompts=[code_review_prompt, summarize_prompt]
+)
 
 # Get server info
 info = server.get_info()
 print(f"Server: {info['name']} v{info['version']}")
 print(f"Stage: {info['stage']}")
-print(f"Available tools: {server.list_tools()}")
+print(f"Capabilities: {info['capabilities']}")
+print(f"Tools: {info['tool_count']}, Resources: {info['resource_count']}, Prompts: {info['prompt_count']}")
 
-# Execute calculator tool
+# ===== Working with Tools =====
+print("\n--- Tools ---")
 result = server.execute_tool('calculator', {
     'operation': 'add',
     'a': 10,
     'b': 5
 })
-
 if result['success']:
-    print(f"Result: {result['result']['result']}")  # Output: 15
+    print(f"Calculator result: {result['result']['result']}")  # Output: 15
 
-# Execute echo tool
-result = server.execute_tool('echo', {
-    'message': 'Hello from MCP!'
+# ===== Working with Resources =====
+print("\n--- Resources ---")
+# Read static resource (config)
+config_data = server.read_resource('config://app')
+print(f"Config resource: {config_data['uri']}")
+
+# Read dynamic resource (status)
+status_data1 = server.read_resource('status://system')
+status_data2 = server.read_resource('status://system')
+print(f"Status read count changed: {status_data1['content']['read_count']} -> {status_data2['content']['read_count']}")
+
+# List all resources
+resources = server.list_resources()
+print(f"Available resources: {resources}")
+
+# ===== Working with Prompts =====
+print("\n--- Prompts ---")
+# Get prompt messages for code review
+messages = server.get_prompt_messages('code_review', {
+    'code': 'def foo(): pass',
+    'language': 'python',
+    'focus': 'best practices'
 })
+print(f"Code review prompt generated {len(messages)} messages")
+print(f"System message: {messages[0]['content'][:50]}...")
 
-if result['success']:
-    print(f"Echo: {result['result']['echo']}")
+# Get prompt messages for summarization
+messages = server.get_prompt_messages('summarize', {
+    'text': 'This is a long text to summarize.',
+    'length': 'short'
+})
+print(f"Summarize prompt generated {len(messages)} messages")
 
-# Get tool metadata
-metadata = server.get_tools_metadata()
-for tool_meta in metadata:
-    print(f"Tool: {tool_meta['name']} - {tool_meta['description']}")
+# List all prompts
+prompts = server.list_prompts()
+print(f"Available prompts: {prompts}")
 
 # Shutdown server
 server.shutdown()
@@ -375,32 +520,33 @@ This implementation follows key software architecture principles (as required by
 5. **SOLID Principles**: Especially evident in the base model abstraction and error hierarchy
 6. **Configuration Over Code**: All configurable values in YAML files, not hard-coded
 
-## Stage 2 Architectural Highlights
+## Stage 2-3 Architectural Highlights
 
-### How Stage 2 Builds on Stage 1
+### How Stage 3 Builds on Stages 1-2
 
 1. **Zero Modification to Core**: Stage 1 infrastructure (`src/core/`) remains untouched
-2. **Modular Addition**: MCP layer (`src/mcp/`) is a completely independent module
-3. **Seamless Integration**: MCP components consume Stage 1 services (config, logging, errors)
-4. **No Hard-coded Values**: All MCP configuration in `config/base.yaml`
-5. **Complete Test Coverage**: 39 new tests added (76 tests total, all passing)
+2. **Minimal Changes to Stage 2**: Only the MCP server was updated; existing tools unchanged
+3. **Modular Addition**: Resources and Prompts are independent modules within MCP layer
+4. **Seamless Integration**: All components consume Stage 1 services (config, logging, errors)
+5. **No Hard-coded Values**: All configuration in `config/base.yaml`
+6. **Complete Test Coverage**: 46 new tests added for Stage 3 (122 tests total, all passing)
+7. **Consistent Patterns**: Resources and Prompts follow same patterns as Tools (base class, registry, examples)
 
-### What Stage 2 Does NOT Include (per assignment8)
+### What Stage 3 Does NOT Include (per assignment8)
 
-- **No Resources**: Resource primitives are in Stage 3
-- **No Prompts**: Prompt templates are in Stage 3
 - **No Transport Layer**: HTTP/SSE/STDIO are in Stage 4
 - **No SDK**: SDK abstraction is in Stage 5
 - **No UI**: User interface is in Stage 5
+- **No Client-Server Communication**: All primitives are local/in-process
 
 ## Next Stages (per assignment8)
 
 **Completed:**
 - ✅ **Stage 1: Foundation** - Core infrastructure (config, logging, errors, testing)
 - ✅ **Stage 2: MCP + Tools** - MCP server with tool registry and example tools
+- ✅ **Stage 3: Tools, Resources, and Prompts** - All three MCP primitives with registries and examples
 
 **Remaining:**
-- **Stage 3: Tools, Resources, and Prompts** - Add all three MCP primitives
 - **Stage 4: Transport / Communication Layer** - Add networking (HTTP/SSE/STDIO)
 - **Stage 5: SDK and User Interface** - Client SDK and user-facing interface
 

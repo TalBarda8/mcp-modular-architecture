@@ -119,9 +119,10 @@ class TestMCPServer:
         assert 'version' in info
         assert info['initialized'] is True
         assert info['tool_count'] == 1
+        # Stage 3: All three MCP primitives are now supported
         assert info['capabilities']['tools'] is True
-        assert info['capabilities']['resources'] is False
-        assert info['capabilities']['prompts'] is False
+        assert info['capabilities']['resources'] is True
+        assert info['capabilities']['prompts'] is True
 
     def test_shutdown_server(self, server, calculator_tool, echo_tool):
         """Test shutting down the server."""
