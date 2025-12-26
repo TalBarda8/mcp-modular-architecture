@@ -249,6 +249,97 @@ mcp-modular-architecture/
 
 ---
 
+## Quick Start
+
+Get up and running in 3 minutes:
+
+```bash
+# 1. Clone and install
+git clone https://github.com/TalBarda8/mcp-modular-architecture.git
+cd mcp-modular-architecture
+pip install -r requirements.txt
+
+# 2. Run tests
+pytest
+
+# 3. Try the programmatic API
+python3 -c "
+from src.mcp.server import MCPServer
+from src.mcp.tools.calculator_tool import CalculatorTool
+
+server = MCPServer()
+server.initialize(tools=[CalculatorTool()])
+result = server.execute_tool('calculator', {'operation': 'add', 'a': 5, 'b': 3})
+print(f\"Result: {result['result']['result']}\")
+"
+```
+
+---
+
+## Usage Patterns
+
+This library supports three usage patterns:
+
+### 1. Embedded Server (Library Usage)
+
+Embed the MCP server directly in your application:
+
+```python
+from src.mcp.server import MCPServer
+from src.mcp.tools.calculator_tool import CalculatorTool
+
+server = MCPServer()
+server.initialize(tools=[CalculatorTool()])
+result = server.execute_tool('calculator', {'operation': 'add', 'a': 10, 'b': 5})
+```
+
+**Use this when**: Building a custom application that includes MCP capabilities.
+
+### 2. Standalone Server + CLI
+
+Run the server as a standalone process and interact via CLI:
+
+```bash
+# Terminal 1: Start the server
+python run_server.py
+
+# Terminal 2: Use the CLI
+python -m src.ui.cli info
+python -m src.ui.cli tool calculator --params '{"operation": "add", "a": 10, "b": 5}'
+```
+
+**Use this when**: Testing the CLI or building client applications.
+
+### 3. Standalone Server + SDK
+
+Run the server in one process, connect with the SDK in another:
+
+```python
+from src.sdk.mcp_client import MCPClient
+from src.transport.stdio_transport import STDIOTransport
+import subprocess
+
+# Start server as subprocess
+server_process = subprocess.Popen(
+    ['python', 'run_server.py'],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    text=True
+)
+
+# Connect with SDK
+transport = STDIOTransport()
+transport._input_stream = server_process.stdout
+transport._output_stream = server_process.stdin
+
+client = MCPClient(transport)
+# Use client...
+```
+
+**Use this when**: Building programmatic clients that connect to external MCP servers.
+
+---
+
 ## Running the Project
 
 ### Configuration
@@ -269,7 +360,26 @@ logging:
   level: "DEBUG"
 ```
 
-### Using the MCP Server Programmatically
+### Running the Standalone Server
+
+The `run_server.py` script starts an MCP server listening on STDIO:
+
+```bash
+python run_server.py
+```
+
+The server will:
+- Initialize with all built-in tools, resources, and prompts
+- Listen for JSON-RPC messages on stdin
+- Send responses to stdout
+- Run until interrupted (Ctrl+C)
+
+This is useful for:
+- Testing the CLI
+- Developing client applications
+- Integration testing
+
+### Using the MCP Server Programmatically (Embedded)
 
 ```python
 from src.mcp.server import MCPServer
@@ -314,7 +424,12 @@ print(messages)
 
 ## CLI Usage
 
-The CLI provides a user-friendly interface to interact with the MCP server.
+The CLI provides a user-friendly interface to interact with a running MCP server.
+
+**Prerequisites**: Start the MCP server in a separate terminal:
+```bash
+python run_server.py
+```
 
 ### Available Commands
 
@@ -341,21 +456,30 @@ python -m src.ui.cli prompts
 python -m src.ui.cli prompt code_review --args '{"code": "def foo(): pass", "language": "python"}'
 ```
 
-### Example Session
+### Complete Example
 
 ```bash
+# Terminal 1: Start the server
+$ python run_server.py
+2025-12-26 11:00:00 - ServerRunner - INFO - MCP server ready. Listening on STDIO...
+
+# Terminal 2: Use the CLI
 $ python -m src.ui.cli info
-Server: MCP Modular Server v1.0.0
+Server: MCP Modular Architecture Server v2.0.0
+Status: Running
 Capabilities: tools, resources, prompts
 
 $ python -m src.ui.cli tools
 Available tools:
-- calculator: Perform basic arithmetic operations
-- echo: Echo input message
+  - calculator: Perform basic arithmetic operations
+  - echo: Echo input message
 
 $ python -m src.ui.cli tool calculator --params '{"operation": "multiply", "a": 7, "b": 6}'
+Success: true
 Result: 42
 ```
+
+**Note**: The CLI connects to the server via STDIO transport. Each CLI command sends a JSON-RPC request to the server and displays the response.
 
 ---
 
@@ -363,18 +487,36 @@ Result: 42
 
 The SDK provides a clean, high-level API for integrating with MCP servers.
 
-### Basic Usage
+### Connecting to an External Server
+
+The SDK connects to a running MCP server process:
 
 ```python
 from src.sdk.mcp_client import MCPClient
 from src.transport.stdio_transport import STDIOTransport
+import subprocess
 
-# Create client with STDIO transport
+# Start server as a subprocess
+server_process = subprocess.Popen(
+    ['python', 'run_server.py'],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
+    text=True
+)
+
+# Create transport that communicates with the server process
 transport = STDIOTransport()
+transport._input_stream = server_process.stdout
+transport._output_stream = server_process.stdin
+
+# Create client
 client = MCPClient(transport)
 
-# Use context manager for automatic connection lifecycle
-with client:
+try:
+    # Connect to server
+    client.connect()
+
     # Get server info
     info = client.get_server_info()
     print(f"Connected to {info['name']} v{info['version']}")
@@ -393,14 +535,32 @@ with client:
 
     # Read a resource
     config = client.read_resource('config://app')
-    print(f"Config: {config['content']}")
+    print(f"Config loaded: {len(config['content'])} keys")
 
-    # Get prompt messages
-    messages = client.get_prompt_messages('summarize', {
-        'text': 'Long text to summarize...',
-        'length': 'short'
-    })
-    print(f"Prompt: {messages}")
+finally:
+    # Clean up
+    client.disconnect()
+    server_process.terminate()
+    server_process.wait()
+```
+
+### Using with a Pre-existing Server
+
+If you have a server already running in another terminal:
+
+```python
+from src.sdk.mcp_client import MCPClient
+from src.transport.stdio_transport import STDIOTransport
+import sys
+
+# Note: This requires the server to be running in the same process context
+# For production use, use the subprocess approach above
+transport = STDIOTransport()
+client = MCPClient(transport)
+
+with client:
+    tools = client.list_tools()
+    print(f"Available tools: {[t['name'] for t in tools]}")
 ```
 
 ### SDK Methods

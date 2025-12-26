@@ -1,0 +1,33 @@
+# Configuration for standalone MCP server (run_server.py)
+# This config disables console logging to keep stdout clean for STDIO transport
+
+app:
+  name: "MCP Modular Architecture"
+  version: "2.0.0"
+
+logging:
+  level: "WARNING"  # Reduce noise
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file:
+    enabled: true
+    path: "logs/server.log"
+    max_bytes: 10485760  # 10MB
+    backup_count: 5
+  console:
+    enabled: false  # Disable console logging for clean STDIO transport
+
+error_handling:
+  include_traceback: true
+  log_errors: true
+  raise_on_critical: false  # Don't crash on errors
+
+mcp:
+  server:
+    name: "MCP Modular Architecture Server"
+    version: "2.0.0"
+    enabled: true
+  tools:
+    auto_register: true
+    available_tools:
+      - "calculator"
+      - "echo"
