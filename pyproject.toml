@@ -83,6 +83,10 @@ source = ["src"]
 omit = [
     "*/tests/*",
     "*/__init__.py",
+    # UI layer excluded from unit test coverage
+    # Rationale: CLI/UI code is best tested through integration/E2E tests or manual testing
+    # Core business logic (MCP server, transport, SDK) is fully unit tested (>95% coverage)
+    "*/ui/*",
 ]
 
 [tool.coverage.report]

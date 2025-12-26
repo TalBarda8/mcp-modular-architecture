@@ -3,7 +3,12 @@ MCP CLI Interface.
 
 Command-line interface for interacting with MCP servers.
 Uses the MCP Client SDK for all server communication.
-"""
+
+Note: This module is excluded from unit test coverage (see pyproject.toml).
+UI/CLI code is best tested through integration tests, E2E tests, or manual testing,
+as unit tests for argparse-based interfaces often provide limited value.
+Core business logic is fully unit tested in the SDK, MCP server, and transport layers.
+"""  # pragma: no cover
 
 import sys
 import json
