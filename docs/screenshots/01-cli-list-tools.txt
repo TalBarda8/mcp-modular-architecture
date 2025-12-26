@@ -1,0 +1,11 @@
+/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/runpy.py:127: RuntimeWarning: 'src.ui.cli' found in sys.modules after import of package 'src.ui', but prior to execution of 'src.ui.cli'; this may result in unpredictable behaviour
+  warn(RuntimeWarning(msg))
+2025-12-26 15:43:41,918 - MCPClient - INFO - Connecting to MCP server
+2025-12-26 15:43:41,918 - Transport.stdio - INFO - STDIO transport started
+2025-12-26 15:43:41,918 - MCPClient - DEBUG - Sending request: server.initialize
+{"method": "server.initialize", "id": "req-1"}
+2025-12-26 15:43:41,918 - Transport.stdio - DEBUG - Sent message: {"method": "server.initialize", "id": "req-1"}...
+2025-12-26 15:43:41,918 - MCPClient - INFO - Disconnecting from MCP server
+2025-12-26 15:43:41,918 - Transport.stdio - INFO - STDIO transport stopped
+Error: No response received from server
+2025-12-26 15:43:41,918 - MCPCLI - ERROR - Failed to list tools: No response received from server

@@ -1,0 +1,30 @@
+/Users/talbarda/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0 -- /Applications/Xcode.app/Contents/Developer/usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/talbarda/Desktop/אישי/תואר שני/שנה ב'/LLM's בסביבה מרובת סוכנים/מטלה 8/mcp-modular-architecture
+configfile: pytest.ini
+plugins: langsmith-0.4.37, anyio-4.8.0, Faker-37.12.0, cov-7.0.0
+collecting ... collected 18 items
+
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_tool_metadata PASSED [  5%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_empty_input PASSED [ 11%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_single_item PASSED [ 16%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_multiple_items PASSED [ 22%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_deterministic_results PASSED [ 27%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_custom_workers PASSED [ 33%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_default_workers PASSED [ 38%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_workers_clamping PASSED [ 44%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_large_batch PASSED [ 50%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_negative_numbers PASSED [ 55%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_floating_point_numbers PASSED [ 61%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_missing_items_parameter PASSED [ 66%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_invalid_items_type PASSED [ 72%]
+tests/mcp/tools/test_batch_processor_tool.py::TestBatchProcessorTool::test_schema_to_dict PASSED [ 77%]
+tests/mcp/tools/test_batch_processor_tool.py::TestComputeIntensiveOperation::test_compute_function_exists PASSED [ 83%]
+tests/mcp/tools/test_batch_processor_tool.py::TestComputeIntensiveOperation::test_compute_returns_number PASSED [ 88%]
+tests/mcp/tools/test_batch_processor_tool.py::TestComputeIntensiveOperation::test_compute_deterministic PASSED [ 94%]
+tests/mcp/tools/test_batch_processor_tool.py::TestComputeIntensiveOperation::test_compute_different_inputs PASSED [100%]
+
+============================== 18 passed in 0.80s ==============================

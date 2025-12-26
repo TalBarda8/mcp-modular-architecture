@@ -20,6 +20,7 @@ A production-ready reference implementation of the Model Context Protocol (MCP) 
 - [CLI Usage](#cli-usage)
 - [SDK Usage](#sdk-usage)
 - [Running Tests](#running-tests)
+- [Visual Examples](#visual-examples)
 - [Development](#development)
 - [Contributing](#contributing)
 - [License](#license)
@@ -635,6 +636,54 @@ The project maintains >95% unit test coverage for all core business logic:
 - ✅ **Models & Utilities**: 100%
 
 **Note:** The UI layer (`src/ui/`) is intentionally excluded from unit test coverage. CLI/UI code is best tested through integration tests, E2E tests, or manual testing. See [docs/TESTING.md](docs/TESTING.md) for detailed testing strategy and rationale.
+
+---
+
+## Visual Examples
+
+For comprehensive visual documentation and real usage examples, see **[docs/screenshots.md](docs/screenshots.md)**.
+
+### Quick Overview
+
+The project includes real working examples demonstrating:
+
+#### 1. **SDK Demo** - Complete Workflow
+Shows server initialization, tool listing, and execution of both parallel processing tools:
+
+```
+1. Initializing MCP Server...
+   ✓ Server initialized
+
+2. Listing Available Tools...
+   • calculator, echo, batch_processor, concurrent_fetcher
+
+3. Executing batch_processor (Multiprocessing)...
+   Results: 5 items processed, Workers used: 2
+
+4. Executing concurrent_fetcher (Multithreading)...
+   Results: 3 items processed, Threads used: 3
+```
+
+**Run it**: `export PYTHONPATH=. && python3 examples/sdk_demo.py`
+
+#### 2. **Multiprocessing** (CPU-Bound)
+18 tests demonstrating `multiprocessing.Pool` for parallel processing:
+- True parallelism across CPU cores
+- Bypasses Python's GIL
+- 100% test pass rate in 0.80s
+
+#### 3. **Multithreading** (I/O-Bound)
+20 tests demonstrating `ThreadPoolExecutor` for concurrent I/O:
+- Concurrent execution during I/O wait
+- Thread safety without locks
+- Speedup verification test included
+
+#### 4. **Full Test Suite**
+- **228 tests** passing in 3.09 seconds
+- **95.29% code coverage**
+- Includes both parallel processing approaches
+
+**See complete screenshots and outputs**: [docs/screenshots.md](docs/screenshots.md)
 
 ---
 
