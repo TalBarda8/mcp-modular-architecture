@@ -21,6 +21,7 @@ A production-ready reference implementation of the Model Context Protocol (MCP) 
 - [SDK Usage](#sdk-usage)
 - [Running Tests](#running-tests)
 - [Visual Examples](#visual-examples)
+- [Plugin Example: System Extensibility](#plugin-example-system-extensibility)
 - [Development](#development)
 - [Contributing](#contributing)
 - [License](#license)
@@ -684,6 +685,59 @@ Shows server initialization, tool listing, and execution of both parallel proces
 - Includes both parallel processing approaches
 
 **See complete screenshots and outputs**: [docs/screenshots.md](docs/screenshots.md)
+
+---
+
+## Plugin Example: System Extensibility
+
+A complete working plugin example demonstrates the system's extensibility without modifying core code.
+
+### WeatherTool Plugin
+
+**Location**: `examples/plugins/weather_plugin.py`
+
+This plugin shows how to extend MCP with external tools:
+- **No core code changes required** (demonstrates Open/Closed Principle)
+- **Uses existing extension points** (BaseTool, ToolRegistry)
+- **Works exactly like built-in tools** (same initialization, execution, listing)
+
+### Running the Plugin Demo
+
+```bash
+# Run plugin demo
+export PYTHONPATH=.
+python3 examples/plugins/plugin_demo.py
+```
+
+**Output**:
+```
+MCP Plugin Demo - System Extensibility
+
+1. Initializing MCP Server...
+   ✓ Server initialized with built-in tools + weather plugin
+
+2. Listing All Available Tools (Built-in + Plugin)...
+   • [Built-in] calculator: Perform basic arithmetic operations...
+   • [Built-in] echo: Echo back the provided message...
+   • [Built-in] batch_processor: Process a batch of numbers in parallel...
+   • [Built-in] concurrent_fetcher: Process items concurrently...
+   • [PLUGIN  ] weather: Get current weather information for a city...
+
+4. Testing Plugin Tool (weather)...
+   City: Tel Aviv
+   Temperature: 22°C
+   Condition: Rainy
+   Humidity: 61%
+```
+
+### Key Takeaways
+
+✓ **Zero core modifications**: Plugin is completely external
+✓ **Same interface**: Plugin works like built-in tools
+✓ **Clean architecture**: Uses dependency inversion (BaseTool abstraction)
+✓ **Open/Closed Principle**: System open for extension, closed for modification
+
+**Full documentation**: See Section 9.4.3 in [docs/architecture.md](docs/architecture.md#943-concrete-plugin-example-weathertool)
 
 ---
 

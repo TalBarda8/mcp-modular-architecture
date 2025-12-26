@@ -1446,6 +1446,136 @@ For users requiring a plugin system, recommended approach:
 - ❌ Bypass registry pattern
 - ❌ Break layer boundaries
 
+#### 9.4.3 Concrete Plugin Example: WeatherTool
+
+**Location**: `examples/plugins/weather_plugin.py`
+
+To demonstrate that the extension points work in practice, a complete working plugin example is provided.
+
+**The Plugin**:
+```python
+from src.mcp.tools.base_tool import BaseTool
+from src.mcp.schemas.tool_schemas import ToolSchema
+
+class WeatherTool(BaseTool):
+    """Weather information tool - demonstrates plugin extensibility."""
+
+    def _define_schema(self) -> ToolSchema:
+        return ToolSchema(
+            name='weather',
+            description='Get current weather information for a city (simulated data)',
+            input_schema={
+                'type': 'object',
+                'properties': {
+                    'city': {'type': 'string', 'description': 'City name'},
+                    'units': {
+                        'type': 'string',
+                        'enum': ['celsius', 'fahrenheit'],
+                        'default': 'celsius'
+                    }
+                },
+                'required': ['city']
+            },
+            # ... output_schema
+        )
+
+    def _execute_impl(self, params):
+        city = params.get('city')
+        units = params.get('units', 'celsius')
+        # Simulate weather data (no external API needed for demo)
+        return self._simulate_weather(city, units)
+```
+
+**How to Use the Plugin**:
+
+```bash
+# Run the plugin demo
+cd mcp-modular-architecture
+export PYTHONPATH=.
+python3 examples/plugins/plugin_demo.py
+```
+
+**Output**:
+```
+======================================================================
+MCP Plugin Demo - System Extensibility
+======================================================================
+
+1. Initializing MCP Server...
+   ✓ Server initialized with built-in tools + weather plugin
+
+2. Listing All Available Tools (Built-in + Plugin)...
+   • [Built-in] calculator: Perform basic arithmetic operations...
+   • [Built-in] echo: Echo back the provided message...
+   • [Built-in] batch_processor: Process a batch of numbers in parallel...
+   • [Built-in] concurrent_fetcher: Process items concurrently...
+   • [PLUGIN  ] weather: Get current weather information for a city...
+
+3. Testing Built-in Tool (calculator)...
+   Input: 15 + 27
+   Result: 42
+
+4. Testing Plugin Tool (weather)...
+   City: Tel Aviv
+   Temperature: 22°C
+   Condition: Rainy
+   Humidity: 61%
+```
+
+**Key Observations**:
+
+✅ **No Core Code Modifications**:
+- `weather_plugin.py` is completely external
+- No changes to `src/mcp/` directory
+- No changes to `MCPServer` class
+- No changes to `ToolRegistry`
+
+✅ **Uses Existing Extension Points**:
+- **BaseTool**: Abstract base class (dependency inversion)
+- **ToolSchema**: Standard schema definition
+- **ToolRegistry**: Automatic registration
+- **MCPServer.initialize()**: Accepts any `BaseTool` subclass
+
+✅ **Works Like Built-in Tools**:
+- Same initialization: `server.initialize(tools=[..., WeatherTool()])`
+- Same listing: appears in `server.get_tools_metadata()`
+- Same execution: `server.execute_tool('weather', params)`
+- Same error handling, logging, validation
+
+✅ **Demonstrates Clean Architecture Principles**:
+- **Open/Closed**: System open for extension (new tools), closed for modification (no core changes)
+- **Dependency Inversion**: Plugin depends on `BaseTool` abstraction, not concrete implementations
+- **Single Responsibility**: Plugin has one job - provide weather data
+- **Separation of Concerns**: Plugin isolated from core MCP logic
+
+**Why This Validates Extensibility**:
+
+1. **Proof by Construction**: A working plugin exists, demonstrating extension points are real
+2. **No Workarounds**: Plugin uses official extension mechanisms, no hacks
+3. **Production-Ready Pattern**: Same approach works for any external tool
+4. **Academic Validation**: Demonstrates architectural quality beyond theoretical discussion
+
+**Comparison: Plugin vs Built-in Tool**:
+
+| Aspect | Built-in Tool (e.g., CalculatorTool) | Plugin (WeatherTool) |
+|--------|-------------------------------------|---------------------|
+| **Location** | `src/mcp/tools/calculator_tool.py` | `examples/plugins/weather_plugin.py` |
+| **Extends** | `BaseTool` | `BaseTool` (same!) |
+| **Registration** | `server.initialize(tools=[...])` | `server.initialize(tools=[...])` (same!) |
+| **Execution** | `server.execute_tool('calculator', ...)` | `server.execute_tool('weather', ...)` (same!) |
+| **Core Changes** | Part of core codebase | Zero core changes |
+
+**For Production Plugins**:
+
+In a production system, you might add:
+- **Plugin discovery**: Auto-load from `plugins/` directory
+- **Plugin validation**: Check signatures, schemas before loading
+- **Plugin isolation**: Sandboxing for untrusted plugins
+- **Plugin versioning**: Compatibility checks
+- **Plugin dependencies**: Dependency management
+
+But the fundamental extension pattern remains the same as demonstrated here.
+
 ---
 
 ### 9.5 Conclusion on Extensibility
