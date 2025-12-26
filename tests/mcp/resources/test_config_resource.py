@@ -59,3 +59,15 @@ class TestConfigResource:
 
         assert isinstance(resource_dict, dict)
         assert resource_dict['uri'] == "config://app"
+
+    def test_to_dict_includes_metadata(self):
+        """Test to_dict includes all metadata."""
+        resource = ConfigResource()
+        dict_repr = resource.to_dict()
+
+        assert 'uri' in dict_repr
+        assert 'name' in dict_repr
+        assert 'description' in dict_repr
+        assert 'mimeType' in dict_repr
+        assert 'isDynamic' in dict_repr
+        assert dict_repr['isDynamic'] is False

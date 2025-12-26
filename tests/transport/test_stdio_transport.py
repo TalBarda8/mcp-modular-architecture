@@ -139,3 +139,28 @@ class TestSTDIOTransport:
         parsed = json.loads(output)
         assert parsed["error"] == "test_error_code"
         assert parsed["message"] == "Test error"
+
+    def test_send_message_exception_handling(self, transport):
+        """Test send_message handles exceptions gracefully."""
+        # Create a mock stream that raises an exception on write
+        class FailingStream:
+            def write(self, data):
+                raise IOError("Stream write error")
+            def flush(self):
+                pass
+
+        transport._output_stream = FailingStream()
+
+        # Should not raise, but log error
+        transport.send_message({"test": "data"})
+
+    def test_receive_message_exception(self, transport):
+        """Test receive_message handles general exceptions."""
+        # Create a mock stream that raises an exception
+        class FailingStream:
+            def readline(self):
+                raise IOError("Stream error")
+
+        transport._input_stream = FailingStream()
+        result = transport.receive_message()
+        assert result is None

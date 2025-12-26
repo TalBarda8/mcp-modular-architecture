@@ -67,3 +67,15 @@ class TestStatusResource:
         assert metadata['uri'] == "status://system"
         assert metadata['name'] == "System Status"
         assert metadata['isDynamic'] is True
+
+    def test_to_dict_includes_metadata(self):
+        """Test to_dict includes all metadata."""
+        resource = StatusResource()
+        dict_repr = resource.to_dict()
+
+        assert 'uri' in dict_repr
+        assert 'name' in dict_repr
+        assert 'description' in dict_repr
+        assert 'mimeType' in dict_repr
+        assert 'isDynamic' in dict_repr
+        assert dict_repr['isDynamic'] is True

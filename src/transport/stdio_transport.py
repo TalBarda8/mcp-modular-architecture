@@ -67,7 +67,7 @@ class STDIOTransport(BaseTransport):
         except Exception as e:
             error_msg = f"Failed to send message: {str(e)}"
             self.logger.error(error_msg)
-            self.error_handler.log_exception(e)
+            self.error_handler.handle_error(e)
 
     def receive_message(self) -> Optional[Dict[str, Any]]:
         """
@@ -102,7 +102,7 @@ class STDIOTransport(BaseTransport):
         except Exception as e:
             error_msg = f"Failed to receive message: {str(e)}"
             self.logger.error(error_msg)
-            self.error_handler.log_exception(e)
+            self.error_handler.handle_error(e)
             return None
 
     def run_server(self) -> None:
@@ -134,7 +134,7 @@ class STDIOTransport(BaseTransport):
             self.logger.info("STDIO server interrupted by user")
         except Exception as e:
             self.logger.error(f"STDIO server error: {str(e)}")
-            self.error_handler.log_exception(e)
+            self.error_handler.handle_error(e)
         finally:
             self.stop()
             self.logger.info("STDIO server loop ended")

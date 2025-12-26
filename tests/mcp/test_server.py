@@ -139,3 +139,103 @@ class TestMCPServer:
         # Should not raise error
         server.shutdown()
         assert not server.is_initialized
+
+    def test_register_resource_before_init(self, server):
+        """Test registering resource before initialization raises error."""
+        from src.mcp.resources.config_resource import ConfigResource
+        resource = ConfigResource()
+        
+        with pytest.raises(ServiceError) as exc_info:
+            server.register_resource(resource)
+        assert "not initialized" in str(exc_info.value).lower()
+
+    def test_register_prompt_before_init(self, server):
+        """Test registering prompt before initialization raises error."""
+        from src.mcp.prompts.code_review_prompt import CodeReviewPrompt
+        prompt = CodeReviewPrompt()
+        
+        with pytest.raises(ServiceError) as exc_info:
+            server.register_prompt(prompt)
+        assert "not initialized" in str(exc_info.value).lower()
+
+    def test_read_resource_before_init(self, server):
+        """Test reading resource before initialization returns error."""
+        result = server.read_resource("config://app")
+        assert 'error' in result
+        assert "not initialized" in result['error'].lower()
+
+    def test_get_prompt_messages_before_init(self, server):
+        """Test getting prompt messages before initialization returns error."""
+        result = server.get_prompt_messages("test_prompt")
+        assert result['success'] is False
+        assert 'error' in result
+        assert "not initialized" in result['error'].lower()
+
+    def test_read_resource_with_exception(self, server):
+        """Test reading non-existent resource handles exception."""
+        server.initialize()
+        result = server.read_resource("nonexistent://resource")
+        assert 'error' in result
+
+    def test_get_prompt_messages_with_exception(self, server):
+        """Test getting messages for non-existent prompt handles exception."""
+        server.initialize()
+        result = server.get_prompt_messages("nonexistent_prompt")
+        assert result['success'] is False
+        assert 'error' in result
+
+    def test_get_resources_metadata(self, server):
+        """Test getting metadata for all resources."""
+        from src.mcp.resources.config_resource import ConfigResource
+        from src.mcp.resources.status_resource import StatusResource
+        
+        server.initialize(resources=[ConfigResource(), StatusResource()])
+        metadata = server.get_resources_metadata()
+        
+        assert len(metadata) == 2
+        assert any(r['uri'] == 'config://app' for r in metadata)
+        assert any(r['uri'] == 'status://system' for r in metadata)
+
+    def test_get_prompts_metadata(self, server):
+        """Test getting metadata for all prompts."""
+        from src.mcp.prompts.code_review_prompt import CodeReviewPrompt
+        from src.mcp.prompts.summarize_prompt import SummarizePrompt
+        
+        server.initialize(prompts=[CodeReviewPrompt(), SummarizePrompt()])
+        metadata = server.get_prompts_metadata()
+        
+        assert len(metadata) == 2
+        assert any(p['name'] == 'code_review' for p in metadata)
+        assert any(p['name'] == 'summarize' for p in metadata)
+
+    def test_initialize_with_invalid_tool(self, server):
+        """Test initialization handles tool registration failure gracefully."""
+        # Create a mock tool that will fail to register
+        class FailingTool:
+            def __init__(self):
+                self.name = None  # This will cause registration to fail
+                
+        # Should not raise, but log error
+        server.initialize(tools=[FailingTool()])
+        # Server should still be initialized even if tool registration failed
+        assert server.is_initialized
+
+    def test_initialize_with_invalid_resource(self, server):
+        """Test initialization handles resource registration failure gracefully."""
+        class FailingResource:
+            def __init__(self):
+                self.uri = None  # This will cause registration to fail
+                
+        # Should not raise, but log error
+        server.initialize(resources=[FailingResource()])
+        assert server.is_initialized
+
+    def test_initialize_with_invalid_prompt(self, server):
+        """Test initialization handles prompt registration failure gracefully."""
+        class FailingPrompt:
+            def __init__(self):
+                self.name = None  # This will cause registration to fail
+                
+        # Should not raise, but log error
+        server.initialize(prompts=[FailingPrompt()])
+        assert server.is_initialized
