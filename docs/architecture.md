@@ -337,7 +337,43 @@ prompt <name> --args '{...}'    # Get prompt messages
 
 ## 3. Architecture Diagrams
 
-### 3.1 Component Diagram (High-Level)
+This section provides visual representations of the system architecture using the C4 model and custom diagrams. The C4 model (Context, Containers, Components, Code) provides a hierarchical way to visualize software architecture at different levels of abstraction.
+
+### 3.1 C4 Model Diagrams
+
+The following C4 diagrams provide standardized architectural views:
+
+#### 3.1.1 C4 Context Diagram
+
+The **Context Diagram** shows the system in its environment, including external actors (developers, AI agents) and their interactions with the MCP Modular Architecture.
+
+**See**: [diagrams/c4_context.md](diagrams/c4_context.md)
+
+**What it shows**:
+- External actors: Software Developers, AI Agents
+- The MCP Modular Architecture system boundary
+- External systems: Configuration files, data sources
+- High-level relationships and communication flows
+
+**Why it matters**: This diagram establishes what the system is, who uses it, and how it fits into the broader ecosystem. It provides the highest-level view for stakeholders unfamiliar with internal implementation.
+
+#### 3.1.2 C4 Container Diagram
+
+The **Container Diagram** zooms into the system to show the major containers (applications, services, libraries) that make up the architecture.
+
+**See**: [diagrams/c4_container.md](diagrams/c4_container.md)
+
+**What it shows**:
+- Five containers: CLI, SDK, Transport Layer, MCP Server, Core Infrastructure
+- Technology choices for each container (Python, argparse, YAML, etc.)
+- Inter-container communication and dependencies
+- Unidirectional dependency flow from top to bottom
+
+**Why it matters**: This diagram shows the internal architecture at the container level, illustrating the layered design and separation of concerns. It helps developers understand which components to modify when implementing new features or fixing bugs.
+
+---
+
+### 3.2 Component Diagram (High-Level)
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -416,7 +452,7 @@ prompt <name> --args '{...}'    # Get prompt messages
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 Layer Interaction Diagram
+### 3.3 Layer Interaction Diagram
 
 ```
 ┌─────────┐
@@ -460,7 +496,7 @@ prompt <name> --args '{...}'    # Get prompt messages
 └─────────┘
 ```
 
-### 3.3 Data Flow Example: Request Lifecycle
+### 3.4 Data Flow Example: Request Lifecycle
 
 This example shows the complete lifecycle of a `list_tools` request:
 
@@ -554,7 +590,7 @@ Step 10: CLI Output
 └──────────────────────────────────────┘
 ```
 
-### 3.4 Stage-Based Evolution Diagram
+### 3.5 Stage-Based Evolution Diagram
 
 Shows how each stage builds upon the previous without modification:
 
