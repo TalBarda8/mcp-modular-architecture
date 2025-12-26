@@ -815,7 +815,7 @@ Additional documentation available in the `docs/` directory:
 
 ## License
 
-This project is licensed under the MIT License. See `pyproject.toml` for details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
@@ -830,10 +830,10 @@ GitHub: [@TalBarda8](https://github.com/TalBarda8)
 ## Acknowledgments
 
 Built with:
-- **Python 3.10+**
-- **pytest** for testing
-- **pyyaml** for configuration
-- **python-dotenv** for environment management
+- **Python** — Core language and standard library
+- **pytest** — Testing framework
+- **pyyaml** — Configuration management
+- **argparse** — Command-line interface
 
 ---
 
