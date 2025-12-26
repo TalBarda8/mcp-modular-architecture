@@ -1467,6 +1467,205 @@ The MCP Modular Architecture achieves extensibility through:
 
 ---
 
+## 10. Parallel Processing & Performance
+
+### 10.1 CPU-Bound vs I/O-Bound Operations
+
+Understanding the distinction between CPU-bound and I/O-bound operations is critical for choosing the correct parallelization strategy in Python.
+
+#### CPU-Bound Operations
+
+**Definition**: Operations that are limited by CPU processing power, where the CPU is actively computing for the majority of the time.
+
+**Characteristics**:
+- Heavy mathematical computations
+- Data transformations (sorting, filtering large datasets)
+- Image/video processing
+- Cryptographic operations
+- Machine learning model training
+
+**Python's Global Interpreter Lock (GIL) Problem**:
+Python's GIL allows only **one thread** to execute Python bytecode at a time, even on multi-core systems. This means threading **does not provide true parallelism** for CPU-bound tasks.
+
+**Solution**: Use **multiprocessing** to bypass the GIL by creating separate Python processes, each with its own GIL.
+
+#### I/O-Bound Operations
+
+**Definition**: Operations that spend most of their time waiting for input/output operations to complete.
+
+**Characteristics**:
+- Network requests (API calls, web scraping)
+- File I/O (reading/writing large files)
+- Database queries
+- User input
+
+**Python Threading Works Here**:
+While one thread waits for I/O, other threads can execute. The GIL is released during I/O operations, allowing concurrency.
+
+**Solutions**:
+- **Threading** (`threading` module): Suitable for I/O-bound tasks
+- **Asyncio** (`asyncio` module): Modern async/await pattern for I/O concurrency
+
+---
+
+### 10.2 Parallel Processing in MCP Architecture
+
+#### Example: BatchProcessorTool (Multiprocessing)
+
+The `BatchProcessorTool` (`src/mcp/tools/batch_processor_tool.py`) demonstrates **CPU-bound parallel processing** using multiprocessing:
+
+**Implementation**:
+```python
+from multiprocessing import Pool, cpu_count
+
+class BatchProcessorTool(BaseTool):
+    """Process CPU-intensive operations in parallel."""
+
+    def _execute_impl(self, params):
+        items = params.get('items', [])
+        workers = params.get('workers', cpu_count())
+
+        # Use multiprocessing.Pool for true parallelism
+        with Pool(processes=workers) as pool:
+            # pool.map distributes work across CPU cores
+            results = pool.map(_compute_intensive_operation, items)
+
+        return {
+            'results': results,
+            'count': len(results),
+            'workers_used': workers
+        }
+```
+
+**Why Multiprocessing?**
+- Bypasses GIL by using separate processes
+- Achieves true parallelism on multi-core CPUs
+- Each process has independent memory space
+- Ideal for computationally intensive operations
+
+**Usage Example**:
+```bash
+# Process 100 numbers in parallel across 4 CPU cores
+python -m src.ui.cli tool batch_processor \
+  --params '{"items": [1,2,3,...,100], "workers": 4}'
+```
+
+**Performance Characteristics**:
+- **Sequential Processing**: O(n) time for n items
+- **Parallel Processing**: O(n/p) time for n items across p cores
+- **Speedup**: Near-linear for CPU-bound tasks (up to p times faster)
+
+---
+
+### 10.3 When to Use Each Approach
+
+| Operation Type | Recommended Approach | Reason |
+|----------------|---------------------|--------|
+| **CPU-Bound** | `multiprocessing.Pool` | Bypasses GIL, true parallelism |
+| **I/O-Bound** | `threading.Thread` or `asyncio` | GIL released during I/O |
+| **Mixed** | Combination or `concurrent.futures` | Provides unified interface |
+
+**Example Decision Tree**:
+```
+Is the operation computationally intensive?
+├─ Yes (CPU-bound) → Use multiprocessing
+│   └─ Example: Image processing, data transformation
+│
+└─ No (I/O-bound) → Use threading or asyncio
+    └─ Example: API calls, file I/O
+```
+
+---
+
+### 10.4 Architectural Implications
+
+**Multiprocessing Considerations**:
+1. **Picklability**: Functions passed to Pool must be picklable (defined at module level)
+2. **Memory Overhead**: Each process has its own memory space (higher overhead than threads)
+3. **Startup Cost**: Creating processes is slower than creating threads
+4. **Communication**: Inter-process communication is more complex than thread communication
+
+**Our Implementation**:
+- `_compute_intensive_operation` is a **module-level function** (not a class method) to ensure picklability
+- `Pool.map` is used for **simple parallelization** without complex state sharing
+- **Context manager** (`with Pool(...)`) ensures proper resource cleanup
+- **No shared state** to avoid complexity of locks/semaphores/managers
+
+**Example from `batch_processor_tool.py`**:
+```python
+# Module-level function (picklable)
+def _compute_intensive_operation(number: float) -> float:
+    """
+    Defined at module level for multiprocessing.Pool compatibility.
+    Class methods can cause serialization issues.
+    """
+    result = number ** 2
+    for i in range(1000):
+        result = (result + i * 0.0001) % 1000000
+    return result
+
+# Tool uses the function
+class BatchProcessorTool(BaseTool):
+    def _execute_impl(self, params):
+        with Pool(processes=workers) as pool:
+            results = pool.map(_compute_intensive_operation, items)
+        return {'results': results}
+```
+
+---
+
+### 10.5 Testing Parallel Code
+
+**Challenges**:
+- Non-deterministic execution order (for threading)
+- Race conditions and deadlocks (for shared state)
+- Difficult to reproduce timing-dependent bugs
+
+**Our Testing Strategy**:
+- `multiprocessing.Pool.map` **preserves order**, making results deterministic
+- **No shared state** eliminates race conditions
+- **Comprehensive tests** (`tests/mcp/tools/test_batch_processor_tool.py`) verify:
+  - Correct parallel execution output
+  - Deterministic results (same input → same output)
+  - Graceful handling of edge cases (empty input, single item)
+  - Worker count validation and clamping
+
+**Example Test**:
+```python
+def test_deterministic_results(self, tool):
+    """Verify results are deterministic and ordered."""
+    items = [2, 4, 6, 8]
+    result1 = tool.execute({'items': items})
+    result2 = tool.execute({'items': items})
+
+    # Results should be identical for same input
+    assert result1['result']['results'] == result2['result']['results']
+```
+
+---
+
+### 10.6 Performance Benchmarks
+
+**Hypothetical Performance** (for reference):
+
+| Items | Sequential | Parallel (4 cores) | Speedup |
+|-------|-----------|-------------------|---------|
+| 10    | 50ms      | 15ms              | 3.3x    |
+| 100   | 500ms     | 130ms             | 3.8x    |
+| 1000  | 5000ms    | 1300ms            | 3.8x    |
+
+**Notes**:
+- Actual speedup depends on CPU cores available
+- Overhead of process creation reduces benefit for small batches
+- Near-linear speedup for CPU-intensive operations
+- I/O-bound operations would show minimal speedup with multiprocessing
+
+---
+
+**For future work**, the architectural foundation supports building a plugin system without modifying existing code - which itself validates the extensibility goal.
+
+---
+
 **For detailed architectural decisions, see:**
 - [ADR-001: Five-Stage Modular Architecture](./adr/ADR-001-five-stage-architecture.md)
 - [ADR-002: Transport Abstraction via Handler](./adr/ADR-002-transport-abstraction.md)

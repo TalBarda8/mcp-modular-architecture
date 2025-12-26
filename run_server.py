@@ -29,6 +29,7 @@ if 'APP_ENV' not in os.environ:
 from src.mcp.server import MCPServer
 from src.mcp.tools.calculator_tool import CalculatorTool
 from src.mcp.tools.echo_tool import EchoTool
+from src.mcp.tools.batch_processor_tool import BatchProcessorTool
 from src.mcp.resources.config_resource import ConfigResource
 from src.mcp.resources.status_resource import StatusResource
 from src.mcp.prompts.code_review_prompt import CodeReviewPrompt
@@ -48,7 +49,7 @@ def main():
         server = MCPServer()
 
         server.initialize(
-            tools=[CalculatorTool(), EchoTool()],
+            tools=[CalculatorTool(), EchoTool(), BatchProcessorTool()],
             resources=[ConfigResource(), StatusResource()],
             prompts=[CodeReviewPrompt(), SummarizePrompt()]
         )
