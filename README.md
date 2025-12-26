@@ -1,558 +1,257 @@
-# MCP Modular Architecture - Stage 5: SDK and User Interface
+# MCP Modular Architecture
 
-This project implements an MCP-based system as part of an academic software architecture assignment, following a structured multi-stage progression as defined in assignment8.
+A production-ready reference implementation of the Model Context Protocol (MCP) with a clean, layered architecture designed for extensibility and maintainability.
 
-**Current Stage: Stage 5 - SDK and User Interface**
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-165%20passing-brightgreen)](tests/)
+[![Coverage](https://img.shields.io/badge/coverage-70%25%2B-brightgreen)](tests/)
 
-This stage adds a thin SDK layer and a CLI interface that demonstrate how external consumers interact with the MCP system through the transport layer.
+---
 
-## Stage Progression (per assignment8)
+## Table of Contents
 
-### Stage 1: Foundation ✅ Completed
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Key Concepts](#key-concepts)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Running the Project](#running-the-project)
+- [CLI Usage](#cli-usage)
+- [SDK Usage](#sdk-usage)
+- [Running Tests](#running-tests)
+- [Development](#development)
+- [Contributing](#contributing)
+- [License](#license)
 
-Stage 1 established the foundational infrastructure:
+---
 
-1. **Clean Architecture**: Modular, well-organized codebase following OOP principles
-2. **Configuration Management**: Centralized, environment-aware configuration system
-3. **Logging Infrastructure**: Comprehensive logging with file and console output
-4. **Error Handling**: Robust exception hierarchy and error handling mechanisms
-5. **Testing Foundation**: Unit testing infrastructure with example test cases
-6. **Code Quality**: Short, focused files (max ~150 lines) with clear responsibilities
+## Overview
 
-### Stage 2: MCP + Tools ✅ Completed
+**MCP Modular Architecture** is a reference implementation demonstrating best practices for building MCP-based systems with:
 
-**Goal**: Build minimal MCP server with Tools support as a modular layer.
+- **Clean layered architecture** with strict separation of concerns
+- **Transport abstraction** enabling protocol-agnostic server implementations
+- **SDK-first design** for easy client integration
+- **Comprehensive testing** with >70% code coverage
+- **Zero hard-coded configuration** using YAML-based config management
 
-Stage 2 adds MCP functionality without modifying Stage 1 infrastructure:
+### What is MCP?
 
-1. **MCP Server Bootstrap**: Minimal server implementation using core infrastructure
-2. **Tool Registry**: Centralized tool registration and discovery
-3. **Tool Abstraction**: Base class for all tools with JSON schema support
-4. **Example Tools**: Calculator and Echo tools demonstrating the architecture
-5. **Tool Execution**: Parameter validation and execution pipeline
-6. **JSON Schemas**: Schema definition and validation for tool inputs/outputs
+The Model Context Protocol (MCP) is a protocol for AI agents to interact with external tools, resources, and prompt templates. This project implements a complete MCP server with all three primitive types:
 
-### Stage 3: Tools, Resources, and Prompts ✅ Completed
+1. **Tools** — Executable functions (e.g., calculator, file operations)
+2. **Resources** — Data sources that can be read (e.g., configuration, system status)
+3. **Prompts** — Pre-defined prompt templates for LLM interactions
 
-**Goal**: Extend MCP server to support all three MCP primitives.
+### Who is this for?
 
-Stage 3 adds Resources and Prompts while keeping Tools unchanged:
+- **Developers** building MCP servers or clients
+- **Architects** seeking a reference implementation of clean architecture patterns
+- **Teams** looking for a modular, testable foundation for AI agent systems
 
-1. **Resource Abstraction**: Base class for all resources with static/dynamic support
-2. **Resource Registry**: Centralized resource registration and discovery
-3. **Example Resources**: ConfigResource (static) and StatusResource (dynamic)
-4. **Resource Read Interface**: URI-based resource access
-5. **Prompt Abstraction**: Base class for prompts with argument validation
-6. **Prompt Registry**: Centralized prompt registration and discovery
-7. **Example Prompts**: CodeReviewPrompt and SummarizePrompt
-8. **Prompt Message Generation**: Template-based message creation with arguments
+---
 
-### Stage 4: Transport / Communication Layer ✅ Completed
+## Architecture
 
-**Goal**: Add modular transport layer for server communication.
+The system follows a strict **layered architecture** with unidirectional dependencies:
 
-Stage 4 introduces the transport layer while keeping MCP logic transport-agnostic:
+```
+┌─────────────────────────────────────────┐
+│          User Interface (CLI)            │
+│     ↓ uses                              │
+├─────────────────────────────────────────┤
+│            Client SDK                    │
+│     ↓ uses                              │
+├─────────────────────────────────────────┤
+│         Transport Layer                  │
+│     (STDIO, HTTP, WebSocket)            │
+│     ↓ uses                              │
+├─────────────────────────────────────────┤
+│           MCP Server                     │
+│  (Tools, Resources, Prompts)            │
+│     ↓ uses                              │
+├─────────────────────────────────────────┤
+│       Core Infrastructure                │
+│  (Config, Logging, Errors)              │
+└─────────────────────────────────────────┘
+```
 
-1. **Transport Abstraction**: BaseTransport class defining transport interface
-2. **STDIO Transport**: Standard input/output transport implementation
-3. **Transport Handler**: Message routing and protocol translation
-4. **JSON-RPC Style Protocol**: Request/response message format
-5. **Complete Decoupling**: MCP server has no knowledge of transport mechanism
-6. **Replaceable Transport**: Ability to swap transports without changing MCP code
+### Layer Responsibilities
 
-### Stage 5: SDK and User Interface ✅ Current Stage
+#### **1. Core Infrastructure**
+Foundation services used throughout the application:
+- **Configuration Management** — YAML-based, environment-aware configuration
+- **Logging** — Structured logging with file rotation and console output
+- **Error Handling** — Custom exception hierarchy and centralized error handling
 
-**Goal**: Add thin SDK layer and user interface for external consumers.
+#### **2. MCP Server Layer**
+Business logic implementing the Model Context Protocol:
+- **Server** — Manages lifecycle and coordinates primitives
+- **Tool Registry** — Centralized tool registration and discovery
+- **Resource Registry** — URI-based resource management
+- **Prompt Registry** — Template-based prompt management
 
-Stage 5 provides client-side access to MCP servers:
+#### **3. Transport Layer**
+Protocol-agnostic communication:
+- **Base Transport** — Abstract interface for all transport implementations
+- **STDIO Transport** — Standard input/output communication (recommended for MCP)
+- **Transport Handler** — Routes messages between transport and MCP server
 
-1. **MCP Client SDK**: Thin wrapper around transport communication
-2. **High-Level Methods**: Simple API for tools, resources, and prompts
-3. **Transport-Agnostic**: SDK works with any transport implementation
-4. **CLI Interface**: Command-line interface for user interaction
-5. **SDK-Based UI**: CLI uses SDK (not MCP or transport directly)
-6. **No Business Logic**: SDK remains thin, delegating to transport/server
+#### **4. SDK Layer**
+Client library for MCP server integration:
+- **MCP Client** — High-level API wrapping transport communication
+- Context manager support for connection lifecycle
+- Automatic request/response handling with error detection
 
-**Important**: Stage 5 completes the full architecture stack. All stages are now implemented.
+#### **5. User Interface**
+End-user interaction:
+- **CLI** — Command-line interface using the SDK
+- User-friendly commands for all MCP operations
+- JSON parameter support and formatted output
+
+---
+
+## Key Concepts
+
+### Tools
+
+**Tools** are executable functions that perform actions. Each tool:
+- Defines a JSON schema for input parameters
+- Implements an `execute()` method
+- Returns a standardized result format
+
+**Example Tools:**
+- `calculator` — Perform arithmetic operations (add, subtract, multiply, divide)
+- `echo` — Simple echo functionality
+
+### Resources
+
+**Resources** are data sources identified by URI. Resources can be:
+- **Static** — Content remains constant (e.g., configuration files)
+- **Dynamic** — Content changes with each read (e.g., system status)
+
+**Example Resources:**
+- `config://app` — Application configuration
+- `status://system` — System status with timestamp
+
+### Prompts
+
+**Prompts** are templates for LLM interactions. Each prompt:
+- Accepts arguments (required and optional)
+- Returns an array of messages (system, user, assistant)
+- Supports template-based message generation
+
+**Example Prompts:**
+- `code_review` — Guide model to review code for quality
+- `summarize` — Guide model to summarize text
+
+### Transport Abstraction
+
+The transport layer is **completely decoupled** from MCP logic:
+- MCP server has zero knowledge of transport mechanism
+- Swap STDIO for HTTP/WebSocket without changing MCP code
+- Transport handler bridges the two layers
+
+### SDK-First Design
+
+The client SDK provides a **clean, high-level API**:
+- UI components use SDK exclusively (never transport or MCP directly)
+- SDK works with any transport implementation
+- No business logic duplication
+
+---
 
 ## Project Structure
 
 ```
 mcp-modular-architecture/
 ├── config/                      # Configuration files
-│   ├── base.yaml               # Base configuration (now includes MCP config)
-│   ├── development.yaml        # Development environment config
-│   └── production.yaml         # Production environment config
+│   ├── base.yaml                # Base configuration
+│   ├── development.yaml         # Development environment
+│   └── production.yaml          # Production environment
 │
-├── src/                        # Source code
-│   ├── core/                   # Core infrastructure (Stage 1)
-│   │   ├── config/            # Configuration management
-│   │   │   └── config_manager.py
-│   │   ├── logging/           # Logging system
-│   │   │   └── logger.py
-│   │   └── errors/            # Error handling
-│   │       ├── exceptions.py
-│   │       └── error_handler.py
+├── src/                         # Source code
+│   ├── core/                    # Core infrastructure
+│   │   ├── config/              # Configuration management
+│   │   ├── logging/             # Logging system
+│   │   └── errors/              # Error handling
 │   │
-│   ├── mcp/                    # MCP Layer (Stages 2-3)
-│   │   ├── server.py          # MCP server (updated for Stage 3)
-│   │   ├── tool_registry.py   # Tool registry (Stage 2)
-│   │   ├── resource_registry.py  # Resource registry (Stage 3) **NEW**
-│   │   ├── prompt_registry.py    # Prompt registry (Stage 3) **NEW**
-│   │   ├── tools/             # Tool implementations (Stage 2)
-│   │   │   ├── base_tool.py   # Abstract base tool
-│   │   │   ├── calculator_tool.py
-│   │   │   └── echo_tool.py
-│   │   ├── resources/         # Resource implementations (Stage 3) **NEW**
-│   │   │   ├── base_resource.py   # Abstract base resource
-│   │   │   ├── config_resource.py # Static resource example
-│   │   │   └── status_resource.py # Dynamic resource example
-│   │   ├── prompts/           # Prompt implementations (Stage 3) **NEW**
-│   │   │   ├── base_prompt.py     # Abstract base prompt
-│   │   │   ├── code_review_prompt.py
-│   │   │   └── summarize_prompt.py
-│   │   └── schemas/           # JSON schema definitions (Stage 2)
-│   │       └── tool_schemas.py
+│   ├── mcp/                     # MCP server layer
+│   │   ├── server.py            # MCP server
+│   │   ├── tool_registry.py     # Tool registry
+│   │   ├── resource_registry.py # Resource registry
+│   │   ├── prompt_registry.py   # Prompt registry
+│   │   ├── tools/               # Tool implementations
+│   │   ├── resources/           # Resource implementations
+│   │   ├── prompts/             # Prompt implementations
+│   │   └── schemas/             # JSON schemas
 │   │
-│   ├── transport/              # Transport Layer (Stage 4)
-│   │   ├── base_transport.py  # Abstract base transport
-│   │   ├── stdio_transport.py # STDIO transport implementation
-│   │   └── transport_handler.py # Message routing and protocol
+│   ├── transport/               # Transport layer
+│   │   ├── base_transport.py    # Abstract transport
+│   │   ├── stdio_transport.py   # STDIO transport
+│   │   └── transport_handler.py # Message routing
 │   │
-│   ├── sdk/                    # SDK Layer (Stage 5) **NEW**
-│   │   └── mcp_client.py      # MCP Client SDK
+│   ├── sdk/                     # Client SDK
+│   │   └── mcp_client.py        # MCP client
 │   │
-│   ├── ui/                     # User Interface (Stage 5) **NEW**
-│   │   └── cli.py             # Command-line interface
+│   ├── ui/                      # User interface
+│   │   └── cli.py               # CLI interface
 │   │
-│   ├── models/                 # Domain models (Illustrative - Stage 1)
-│   │   ├── base_model.py
-│   │   └── resource.py
-│   │
-│   ├── services/               # Service layer (Illustrative - Stage 1)
-│   │   └── resource_service.py
-│   │
-│   └── utils/                  # Utility functions
-│       └── validators.py
+│   ├── models/                  # Domain models
+│   ├── services/                # Service layer
+│   └── utils/                   # Utilities
 │
-├── tests/                      # Unit tests (mirrors src structure)
-│   ├── core/                  # Stage 1 tests
-│   │   ├── config/
-│   │   └── errors/
-│   ├── mcp/                   # Stage 2-3 tests
-│   │   ├── test_server.py     # Updated for Stage 3
-│   │   ├── test_tool_registry.py  # Stage 2
-│   │   ├── test_resource_registry.py  # Stage 3 **NEW**
-│   │   ├── test_prompt_registry.py    # Stage 3 **NEW**
-│   │   ├── tools/             # Stage 2 tests
-│   │   │   ├── test_calculator_tool.py
-│   │   │   └── test_echo_tool.py
-│   │   ├── resources/         # Stage 3 tests **NEW**
-│   │   │   ├── test_config_resource.py
-│   │   │   └── test_status_resource.py
-│   │   └── prompts/           # Stage 3 tests **NEW**
-│   │       ├── test_code_review_prompt.py
-│   │       └── test_summarize_prompt.py
-│   ├── transport/              # Stage 4 tests
-│   │   ├── test_stdio_transport.py
-│   │   └── test_transport_handler.py
-│   ├── sdk/                    # Stage 5 tests **NEW**
-│   │   └── test_mcp_client.py
-│   ├── models/
-│   ├── services/
-│   └── utils/
+├── tests/                       # Unit tests (165 tests)
+│   ├── core/
+│   ├── mcp/
+│   ├── transport/
+│   ├── sdk/
+│   └── ...
 │
-├── logs/                       # Application logs (gitignored)
-├── .gitignore
-├── pytest.ini                  # Pytest configuration
-├── requirements.txt            # Python dependencies
-└── README.md                   # This file
+├── docs/                        # Documentation
+├── pyproject.toml               # Project metadata
+└── requirements.txt             # Dependencies
 ```
 
-## Important Note: Illustrative Domain Layer
+---
 
-**The domain entities (`Resource`, `ResourceService`, CRUD operations) are illustrative placeholders only.**
-
-These components exist solely to demonstrate how the core architectural infrastructure (configuration, logging, error handling, testing) works in practice. They do **not** represent the final system domain or chosen business logic.
-
-In subsequent stages, when the actual MCP-based domain is defined, these placeholder entities can be completely replaced or removed without any impact on the core infrastructure layer. The architectural foundation (`src/core/`) is domain-agnostic and designed to support any application built on top of it.
-
-## Key Components
-
-### Configuration Layer (`src/core/config/`)
-
-- **ConfigManager**: Singleton configuration manager
-  - Loads YAML configuration files
-  - Supports environment-specific configs (development, production)
-  - Enables local overrides (local.yaml)
-  - Provides dot-notation access to nested values
-  - **No hard-coded values** in the codebase
-
-### Logging System (`src/core/logging/`)
-
-- **Logger**: Centralized logging mechanism
-  - Configurable log levels
-  - File rotation (size-based)
-  - Console and file output
-  - Structured log formatting
-  - Configuration-driven setup
-
-### Error Handling (`src/core/errors/`)
-
-- **Custom Exception Hierarchy**:
-  - `BaseApplicationError`: Base class for all exceptions
-  - `ConfigurationError`: Configuration-related errors
-  - `ValidationError`: Data validation failures
-  - `ServiceError`: Service operation failures
-  - `ResourceNotFoundError`: Missing resource errors
-  - `ResourceAlreadyExistsError`: Duplicate resource errors
-
-- **ErrorHandler**: Centralized error handling
-  - Logging integration
-  - Traceback management
-  - Safe execution wrapper
-
-### Domain Models (`src/models/`) - **Illustrative Only**
-
-- **BaseModel**: Abstract base class with common functionality
-  - Validation interface
-  - Serialization (to_dict)
-  - Timestamp management
-
-- **Resource**: Example concrete model (placeholder)
-  - Demonstrates validation patterns
-  - Shows OOP principles
-  - Includes business methods
-  - **Can be replaced with actual domain entities in later stages**
-
-### Service Layer (`src/services/`) - **Illustrative Only**
-
-- **ResourceService**: Example service implementation (placeholder)
-  - CRUD operations for demonstration
-  - Business logic separation pattern
-  - Error handling integration
-  - Logging integration
-  - **Can be replaced with actual MCP services in later stages**
-
-### Utilities (`src/utils/`)
-
-- **Validators**: Common validation helpers
-  - String validation
-  - ID format validation
-  - Range checking
-  - Dictionary key validation
-
-## Stage 2-3: MCP Layer Components
-
-### MCP Server (`src/mcp/server.py`)
-
-- **MCPServer**: MCP server with full primitive support
-  - Server initialization and lifecycle management
-  - Tool, Resource, and Prompt registration interfaces
-  - Tool execution pipeline
-  - Resource read interface
-  - Prompt message generation interface
-  - Uses ConfigManager for server configuration
-  - Uses Logger for all server operations
-  - Uses ErrorHandler for robust error handling
-  - **No hard-coded values** - all configuration from YAML
-  - **Stage 3 capabilities**: Tools, Resources, and Prompts
-
-### Tool Registry (`src/mcp/tool_registry.py`)
-
-- **ToolRegistry**: Centralized tool management
-  - Singleton pattern for single source of truth
-  - Tool registration and unregistration
-  - Tool discovery by name
-  - List all available tools
-  - Get tool metadata (schemas, descriptions)
-  - Integrates with logging and error handling
-
-### Tool Abstraction (`src/mcp/tools/base_tool.py`)
-
-- **BaseTool**: Abstract base class for all tools
-  - Defines tool interface contract
-  - Automatic parameter validation using JSON schema
-  - Execution pipeline with logging and error handling
-  - Schema definition requirement
-  - Result standardization (success/failure format)
-  - All concrete tools must inherit from BaseTool
-
-### JSON Schema Support (`src/mcp/schemas/tool_schemas.py`)
-
-- **ToolSchema**: Tool schema representation
-  - JSON schema for input parameters
-  - JSON schema for output values
-  - Schema validation logic
-  - Schema serialization (to_dict)
-  - Type checking for parameters
-
-### Example Tools (Illustrative)
-
-**Note**: These tools are placeholder examples demonstrating the architecture.
-
-- **CalculatorTool** (`src/mcp/tools/calculator_tool.py`)
-  - Performs basic arithmetic operations (add, subtract, multiply, divide)
-  - Demonstrates multi-parameter tools
-  - Shows validation (division by zero)
-  - Example of tool with enumerated operations
-
-- **EchoTool** (`src/mcp/tools/echo_tool.py`)
-  - Simple echo functionality
-  - Demonstrates minimal tool implementation
-  - Single parameter handling
-  - Baseline for understanding tool architecture
-
-### Resource Registry (`src/mcp/resource_registry.py`)
-
-- **ResourceRegistry**: Centralized resource management (Stage 3)
-  - Singleton pattern for single source of truth
-  - Resource registration and unregistration by URI
-  - Resource discovery by URI
-  - List all available resources
-  - Get resource metadata (name, description, MIME type, dynamic status)
-  - Integrates with logging and error handling
-
-### Resource Abstraction (`src/mcp/resources/base_resource.py`)
-
-- **BaseResource**: Abstract base class for all resources (Stage 3)
-  - Defines resource interface contract
-  - URI-based identification
-  - MIME type support
-  - Dynamic vs. static resource differentiation
-  - read() method returns standardized format
-  - Automatic logging and error handling
-  - All concrete resources must inherit from BaseResource
-
-### Example Resources (Illustrative)
-
-**Note**: These resources are placeholder examples demonstrating the architecture.
-
-- **ConfigResource** (`src/mcp/resources/config_resource.py`)
-  - Static resource providing application configuration
-  - Returns current ConfigManager state
-  - Demonstrates static resource pattern (is_dynamic() returns False)
-  - Content remains consistent across reads
-
-- **StatusResource** (`src/mcp/resources/status_resource.py`)
-  - Dynamic resource providing system status
-  - Returns timestamp and read count
-  - Demonstrates dynamic resource pattern (is_dynamic() returns True)
-  - Content changes with each read
-
-### Prompt Registry (`src/mcp/prompt_registry.py`)
-
-- **PromptRegistry**: Centralized prompt management (Stage 3)
-  - Singleton pattern for single source of truth
-  - Prompt registration and unregistration by name
-  - Prompt discovery by name
-  - List all available prompts
-  - Get prompt metadata (name, description, arguments)
-  - Integrates with logging and error handling
-
-### Prompt Abstraction (`src/mcp/prompts/base_prompt.py`)
-
-- **BasePrompt**: Abstract base class for all prompts (Stage 3)
-  - Defines prompt interface contract
-  - Argument definition with required/optional support
-  - Automatic argument validation
-  - get_messages() returns list of message dicts (role + content)
-  - Template-based message generation
-  - All concrete prompts must inherit from BasePrompt
-
-### Example Prompts (Illustrative)
-
-**Note**: These prompts are placeholder examples demonstrating the architecture.
-
-- **CodeReviewPrompt** (`src/mcp/prompts/code_review_prompt.py`)
-  - Guides model to review code for quality
-  - 3 arguments: code (required), language (optional), focus (optional)
-  - Demonstrates multi-argument prompts
-  - Returns system and user messages
-
-- **SummarizePrompt** (`src/mcp/prompts/summarize_prompt.py`)
-  - Guides model to summarize text
-  - 2 arguments: text (required), length (optional)
-  - Demonstrates simpler prompt structure
-  - Template-based message construction
-
-## Stage 4: Transport Layer Components
-
-### Base Transport (`src/transport/base_transport.py`)
-
-- **BaseTransport**: Abstract base class for all transport implementations (Stage 4)
-  - Defines transport interface contract
-  - Message transmission and reception abstraction
-  - Message handler callback mechanism
-  - Transport lifecycle management (start/stop)
-  - Completely independent of MCP logic
-  - All concrete transports must inherit from BaseTransport
-
-### STDIO Transport (`src/transport/stdio_transport.py`)
-
-- **STDIOTransport**: Standard input/output transport (Stage 4)
-  - Communicates via stdin and stdout
-  - Newline-delimited JSON messages
-  - Non-blocking message reception
-  - Automatic JSON serialization/deserialization
-  - Server loop for continuous message processing
-  - Recommended transport for MCP servers
-
-### Transport Handler (`src/transport/transport_handler.py`)
-
-- **TransportHandler**: Bridges transport and MCP server (Stage 4)
-  - Translates transport messages to MCP operations
-  - JSON-RPC style message protocol
-  - Method routing (server.*, tool.*, resource.*, prompt.*)
-  - Request/response formatting
-  - Error handling and response generation
-  - Keeps transport and MCP completely decoupled
-
-### Transport Architecture
-
-The transport layer is designed with complete separation from MCP logic:
-
-**Key Principles:**
-1. **Abstraction**: BaseTransport defines the contract
-2. **Independence**: Transport has no knowledge of MCP primitives
-3. **Adaptability**: TransportHandler translates between layers
-4. **Replaceability**: Swap transports without changing MCP code
-5. **Extensibility**: Add new transports (HTTP, SSE, WebSocket) easily
-
-**Message Flow:**
-```
-Client → Transport (STDIO) → TransportHandler → MCP Server → Response
-        ↑                                                         ↓
-        ←─────────────────────────────────────────────────────────┘
-```
-
-**Supported Methods:**
-- `server.info`: Get server information
-- `server.initialize`: Initialize server
-- `tool.list`: List available tools
-- `tool.execute`: Execute a tool
-- `resource.list`: List available resources
-- `resource.read`: Read a resource
-- `prompt.list`: List available prompts
-- `prompt.get_messages`: Get prompt messages
-
-## Stage 5: SDK and UI Components
-
-### MCP Client SDK (`src/sdk/mcp_client.py`)
-
-- **MCPClient**: Thin client SDK for MCP servers (Stage 5)
-  - Wraps transport communication
-  - High-level methods for tools, resources, and prompts
-  - Transport-agnostic (works with any transport)
-  - Context manager support for connection lifecycle
-  - Request/response handling with automatic error detection
-  - No business logic duplication
-
-**SDK Methods:**
-```python
-# Server methods
-client.get_server_info()          # Get server information
-client.initialize_server()        # Initialize server
-
-# Tool methods
-client.list_tools()               # List available tools
-client.execute_tool(name, params) # Execute a tool
-
-# Resource methods
-client.list_resources()           # List available resources
-client.read_resource(uri)         # Read a resource
-
-# Prompt methods
-client.list_prompts()             # List available prompts
-client.get_prompt_messages(name, args)  # Get prompt messages
-```
-
-### CLI Interface (`src/ui/cli.py`)
-
-- **MCPCLI**: Command-line interface (Stage 5)
-  - Uses MCP Client SDK exclusively
-  - User-friendly commands for all MCP operations
-  - JSON parameter support
-  - Formatted output
-  - Error handling and logging
-
-**CLI Commands:**
-```bash
-python -m src.ui.cli info              # Show server information
-python -m src.ui.cli tools             # List tools
-python -m src.ui.cli tool <name> --params '{...}'  # Execute tool
-python -m src.ui.cli resources         # List resources
-python -m src.ui.cli resource <uri>    # Read resource
-python -m src.ui.cli prompts           # List prompts
-python -m src.ui.cli prompt <name> --args '{...}'  # Get prompt messages
-```
-
-### SDK/UI Architecture
-
-**Complete Stack Flow:**
-```
-User → CLI → SDK → Transport → Handler → MCP Server
-      ↑                                         ↓
-      ←─────────────────────────────────────────┘
-```
-
-**Layer Responsibilities:**
-1. **UI (CLI)**: User interaction and display
-2. **SDK**: High-level API wrapping transport
-3. **Transport**: Message transmission/reception
-4. **Handler**: Protocol translation
-5. **MCP Server**: Business logic execution
-
-**Key Principles:**
-- **Thin SDK**: No business logic, pure communication wrapper
-- **Clean Separation**: UI uses SDK, never transport/MCP directly
-- **Transport-Agnostic**: SDK works with STDIO, HTTP, SSE, etc.
-- **Modularity**: Each layer is independently replaceable
-
-## Setup and Installation
+## Installation
 
 ### Prerequisites
 
-- Python 3.10 or higher
-- pip (Python package manager)
+- **Python 3.10** or higher
+- **pip** (Python package manager)
 
-### Installation
+### Setup
 
-1. Clone the repository:
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/TalBarda8/mcp-modular-architecture.git
    cd mcp-modular-architecture
    ```
 
-2. Create a virtual environment (recommended):
+2. **Create a virtual environment** (recommended):
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-3. Install dependencies:
+3. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
 
-## Running Tests
+   Or install with dev dependencies:
+   ```bash
+   pip install -e ".[dev]"
+   ```
 
-Run all unit tests:
-```bash
-pytest
-```
+---
 
-Run tests with coverage:
-```bash
-pytest --cov=src --cov-report=html
-```
+## Running the Project
 
-Run specific test file:
-```bash
-pytest tests/models/test_resource.py
-```
-
-## Configuration
+### Configuration
 
 Set the environment using the `APP_ENV` environment variable:
 
@@ -570,35 +269,7 @@ logging:
   level: "DEBUG"
 ```
 
-## Example Usage
-
-### Stage 1: Core Infrastructure
-
-```python
-from src.core.config.config_manager import ConfigManager
-from src.core.logging.logger import Logger
-from src.services.resource_service import ResourceService
-
-# Get configuration
-config = ConfigManager()
-app_name = config.get('app.name')
-
-# Get logger
-logger = Logger.get_logger(__name__)
-logger.info("Application started")
-
-# Use service (illustrative placeholder)
-service = ResourceService()
-resource = service.create_resource(
-    resource_id='user-123',
-    name='Example Resource',
-    status='active'
-)
-
-logger.info(f"Created resource: {resource.resource_id}")
-```
-
-### Stage 2-3: MCP Server with Tools, Resources, and Prompts
+### Using the MCP Server Programmatically
 
 ```python
 from src.mcp.server import MCPServer
@@ -609,156 +280,389 @@ from src.mcp.resources.status_resource import StatusResource
 from src.mcp.prompts.code_review_prompt import CodeReviewPrompt
 from src.mcp.prompts.summarize_prompt import SummarizePrompt
 
-# Initialize MCP server with all three primitives
+# Initialize server
 server = MCPServer()
 
-# Create instances
-calculator = CalculatorTool()
-echo = EchoTool()
-config_resource = ConfigResource()
-status_resource = StatusResource()
-code_review_prompt = CodeReviewPrompt()
-summarize_prompt = SummarizePrompt()
-
+# Register primitives
 server.initialize(
-    tools=[calculator, echo],
-    resources=[config_resource, status_resource],
-    prompts=[code_review_prompt, summarize_prompt]
+    tools=[CalculatorTool(), EchoTool()],
+    resources=[ConfigResource(), StatusResource()],
+    prompts=[CodeReviewPrompt(), SummarizePrompt()]
 )
 
-# Get server info
-info = server.get_info()
-print(f"Server: {info['name']} v{info['version']}")
-print(f"Stage: {info['stage']}")
-print(f"Capabilities: {info['capabilities']}")
-print(f"Tools: {info['tool_count']}, Resources: {info['resource_count']}, Prompts: {info['prompt_count']}")
-
-# ===== Working with Tools =====
-print("\n--- Tools ---")
+# Execute a tool
 result = server.execute_tool('calculator', {
     'operation': 'add',
     'a': 10,
     'b': 5
 })
-if result['success']:
-    print(f"Calculator result: {result['result']['result']}")  # Output: 15
+print(result)  # {'success': True, 'result': {'result': 15}}
 
-# ===== Working with Resources =====
-print("\n--- Resources ---")
-# Read static resource (config)
-config_data = server.read_resource('config://app')
-print(f"Config resource: {config_data['uri']}")
+# Read a resource
+config = server.read_resource('config://app')
+print(config)
 
-# Read dynamic resource (status)
-status_data1 = server.read_resource('status://system')
-status_data2 = server.read_resource('status://system')
-print(f"Status read count changed: {status_data1['content']['read_count']} -> {status_data2['content']['read_count']}")
-
-# List all resources
-resources = server.list_resources()
-print(f"Available resources: {resources}")
-
-# ===== Working with Prompts =====
-print("\n--- Prompts ---")
-# Get prompt messages for code review
+# Get prompt messages
 messages = server.get_prompt_messages('code_review', {
     'code': 'def foo(): pass',
-    'language': 'python',
-    'focus': 'best practices'
+    'language': 'python'
 })
-print(f"Code review prompt generated {len(messages)} messages")
-print(f"System message: {messages[0]['content'][:50]}...")
+print(messages)
+```
 
-# Get prompt messages for summarization
-messages = server.get_prompt_messages('summarize', {
-    'text': 'This is a long text to summarize.',
-    'length': 'short'
-})
-print(f"Summarize prompt generated {len(messages)} messages")
+---
+
+## CLI Usage
+
+The CLI provides a user-friendly interface to interact with the MCP server.
+
+### Available Commands
+
+```bash
+# Show server information
+python -m src.ui.cli info
+
+# List all tools
+python -m src.ui.cli tools
+
+# Execute a tool
+python -m src.ui.cli tool calculator --params '{"operation": "add", "a": 10, "b": 5}'
+
+# List all resources
+python -m src.ui.cli resources
+
+# Read a resource
+python -m src.ui.cli resource config://app
 
 # List all prompts
-prompts = server.list_prompts()
-print(f"Available prompts: {prompts}")
+python -m src.ui.cli prompts
 
-# Shutdown server
-server.shutdown()
+# Get prompt messages
+python -m src.ui.cli prompt code_review --args '{"code": "def foo(): pass", "language": "python"}'
 ```
+
+### Example Session
+
+```bash
+$ python -m src.ui.cli info
+Server: MCP Modular Server v1.0.0
+Capabilities: tools, resources, prompts
+
+$ python -m src.ui.cli tools
+Available tools:
+- calculator: Perform basic arithmetic operations
+- echo: Echo input message
+
+$ python -m src.ui.cli tool calculator --params '{"operation": "multiply", "a": 7, "b": 6}'
+Result: 42
+```
+
+---
+
+## SDK Usage
+
+The SDK provides a clean, high-level API for integrating with MCP servers.
+
+### Basic Usage
+
+```python
+from src.sdk.mcp_client import MCPClient
+from src.transport.stdio_transport import STDIOTransport
+
+# Create client with STDIO transport
+transport = STDIOTransport()
+client = MCPClient(transport)
+
+# Use context manager for automatic connection lifecycle
+with client:
+    # Get server info
+    info = client.get_server_info()
+    print(f"Connected to {info['name']} v{info['version']}")
+
+    # List available tools
+    tools = client.list_tools()
+    print(f"Available tools: {tools}")
+
+    # Execute a tool
+    result = client.execute_tool('calculator', {
+        'operation': 'add',
+        'a': 5,
+        'b': 3
+    })
+    print(f"Result: {result['result']['result']}")
+
+    # Read a resource
+    config = client.read_resource('config://app')
+    print(f"Config: {config['content']}")
+
+    # Get prompt messages
+    messages = client.get_prompt_messages('summarize', {
+        'text': 'Long text to summarize...',
+        'length': 'short'
+    })
+    print(f"Prompt: {messages}")
+```
+
+### SDK Methods
+
+**Server Methods:**
+- `get_server_info()` — Get server information
+- `initialize_server()` — Initialize server
+
+**Tool Methods:**
+- `list_tools()` — List available tools
+- `execute_tool(name, parameters)` — Execute a tool
+
+**Resource Methods:**
+- `list_resources()` — List available resources
+- `read_resource(uri)` — Read a resource by URI
+
+**Prompt Methods:**
+- `list_prompts()` — List available prompts
+- `get_prompt_messages(name, arguments)` — Get prompt messages
+
+---
+
+## Running Tests
+
+The project includes comprehensive unit tests with >70% code coverage.
+
+### Run All Tests
+
+```bash
+pytest
+```
+
+### Run with Coverage
+
+```bash
+pytest --cov=src --cov-report=html
+```
+
+View coverage report: `open htmlcov/index.html`
+
+### Run Specific Tests
+
+```bash
+# Run tests for a specific module
+pytest tests/mcp/test_server.py
+
+# Run tests for SDK
+pytest tests/sdk/
+
+# Run tests with verbose output
+pytest -v
+
+# Run tests matching a pattern
+pytest -k "test_calculator"
+```
+
+### Test Statistics
+
+- **Total Tests:** 165
+- **Pass Rate:** 100%
+- **Coverage:** >70%
+- **Test Organization:** Tests mirror source structure
+
+---
+
+## Development
+
+### Adding a New Tool
+
+1. **Create tool class** inheriting from `BaseTool`:
+
+```python
+from src.mcp.tools.base_tool import BaseTool
+
+class MyTool(BaseTool):
+    def __init__(self):
+        super().__init__(
+            name="my_tool",
+            description="Description of my tool",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "param1": {"type": "string"}
+                },
+                "required": ["param1"]
+            }
+        )
+
+    def execute(self, parameters: dict) -> dict:
+        # Implementation
+        return {"result": "some value"}
+```
+
+2. **Register tool** with the server:
+
+```python
+from src.mcp.server import MCPServer
+from my_tool import MyTool
+
+server = MCPServer()
+server.initialize(tools=[MyTool()])
+```
+
+### Adding a New Transport
+
+1. **Create transport class** inheriting from `BaseTransport`:
+
+```python
+from src.transport.base_transport import BaseTransport
+
+class HTTPTransport(BaseTransport):
+    def start(self) -> None:
+        # Start HTTP server
+        pass
+
+    def stop(self) -> None:
+        # Stop HTTP server
+        pass
+
+    def send_message(self, message: dict) -> None:
+        # Send HTTP response
+        pass
+
+    def receive_message(self) -> dict:
+        # Receive HTTP request
+        pass
+```
+
+2. **Use the transport** with the SDK:
+
+```python
+from src.sdk.mcp_client import MCPClient
+from my_transport import HTTPTransport
+
+transport = HTTPTransport()
+client = MCPClient(transport)
+```
+
+### Adding a New Resource
+
+1. **Create resource class** inheriting from `BaseResource`:
+
+```python
+from src.mcp.resources.base_resource import BaseResource
+
+class MyResource(BaseResource):
+    def __init__(self):
+        super().__init__(
+            uri="custom://my-resource",
+            name="My Resource",
+            description="Description of resource",
+            mime_type="application/json"
+        )
+
+    def read(self) -> dict:
+        return {
+            "uri": self.uri,
+            "content": {"key": "value"}
+        }
+
+    def is_dynamic(self) -> bool:
+        return False  # True if content changes
+```
+
+2. **Register resource** with the server:
+
+```python
+server.initialize(resources=[MyResource()])
+```
+
+### Extending the CLI
+
+Edit `src/ui/cli.py` to add new commands. The CLI uses the SDK exclusively.
+
+---
 
 ## Architecture Principles
 
-This implementation follows key software architecture principles (as required by assignment8):
+This implementation demonstrates:
 
-1. **Separation of Concerns**: Clear separation between configuration, logging, models, and services
-2. **Single Responsibility**: Each class has one well-defined responsibility
-3. **Dependency Injection**: Components receive dependencies rather than creating them
-4. **DRY (Don't Repeat Yourself)**: Common functionality extracted to base classes and utilities
-5. **SOLID Principles**: Especially evident in the base model abstraction and error hierarchy
-6. **Configuration Over Code**: All configurable values in YAML files, not hard-coded
+- **SOLID Principles** — Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion
+- **Separation of Concerns** — Clear boundaries between layers
+- **Dependency Injection** — Components receive dependencies rather than creating them
+- **DRY (Don't Repeat Yourself)** — Common functionality extracted to base classes
+- **Configuration Over Code** — All configurable values in YAML, not hard-coded
+- **Testability** — Each layer independently testable with comprehensive test coverage
 
-## Stage 2-5 Architectural Highlights
+### Architectural Highlights
 
-### How Stage 5 Completes the Architecture
-
-1. **Zero Modification to Core**: Stage 1 infrastructure completely untouched across all stages
-2. **Zero Modification to MCP**: MCP server and primitives remain unchanged
-3. **Zero Modification to Transport**: Transport layer remains independent
-4. **Thin SDK Layer**: Client SDK wraps transport without business logic duplication
-5. **Clean UI Separation**: CLI uses SDK exclusively, never transport/MCP directly
-6. **Seamless Integration**: All layers use Stage 1 services (config, logging, errors)
-7. **Complete Test Coverage**: 18 new tests added for Stage 5 (165 tests total, all passing)
-8. **Full Stack**: Complete architecture from core infrastructure to user interface
-
-### What the Complete Architecture Demonstrates
-
-**Layered Architecture:**
-```
-Stage 5: UI (CLI) → SDK
-          ↓           ↓
-Stage 4: Transport → Handler
-          ↓           ↓
-Stage 3: ←───── MCP Server ─────→ (Tools, Resources, Prompts)
-          ↓
-Stage 1: Core Infrastructure (Config, Logging, Errors)
-```
-
-**Key Architectural Achievements:**
-- **Complete Decoupling**: Each layer is independent and replaceable
-- **Single Direction Flow**: Dependencies flow one way (UI → SDK → Transport → MCP → Core)
-- **No Circular Dependencies**: Clean separation enforced at every level
-- **Transport Agnostic**: Swap STDIO for HTTP/SSE without changing SDK or UI
-- **Thin Layers**: Each layer focused on single responsibility
-- **Testability**: Each layer independently testable
-
-**Flexibility Demonstrated:**
+**Replaceability:**
+- Swap STDIO for HTTP transport → only transport layer changes
 - Replace CLI with Web UI → only UI layer changes
-- Replace STDIO with HTTP → only transport layer changes
-- Add new tool/resource/prompt → only MCP layer changes
-- Modify logging/config → only core layer changes
+- Add new tools/resources/prompts → only MCP layer changes
 
-**SOLID Principles in Practice:**
-- **Single Responsibility**: Each layer has one clear purpose
-- **Open/Closed**: Extend via new implementations, not modifications
-- **Liskov Substitution**: All implementations interchangeable via interfaces
-- **Interface Segregation**: Thin, focused interfaces between layers
-- **Dependency Inversion**: Depend on abstractions (interfaces), not concretions
+**Independence:**
+- Each layer has zero knowledge of higher layers
+- MCP server doesn't know about transport mechanism
+- SDK doesn't know about MCP server internals
+- CLI doesn't know about transport or MCP
 
-## Next Stages (per assignment8)
+**Extensibility:**
+- Add new transports by implementing `BaseTransport`
+- Add new tools by implementing `BaseTool`
+- Add new resources by implementing `BaseResource`
+- Add new prompts by implementing `BasePrompt`
 
-**Completed:**
-- ✅ **Stage 1: Foundation** - Core infrastructure (config, logging, errors, testing)
-- ✅ **Stage 2: MCP + Tools** - MCP server with tool registry and example tools
-- ✅ **Stage 3: Tools, Resources, and Prompts** - All three MCP primitives with registries and examples
-- ✅ **Stage 4: Transport / Communication Layer** - Modular transport layer with STDIO implementation
+---
 
-**Remaining:**
-- **Stage 5: SDK and User Interface** - Client SDK and user-facing interface
+## Contributing
 
-Each stage builds upon the previous without breaking existing functionality. The modular architecture enables independent development and testing of each layer.
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Code Quality Standards
+
+- Maintain >70% test coverage
+- Follow PEP 8 style guidelines
+- Keep files under 150 lines
+- Add type hints to all functions
+- Document all public APIs
+
+---
+
+## Documentation
+
+Additional documentation available in the `docs/` directory:
+
+- **[Architecture Documentation](docs/architecture.md)** — Detailed architecture overview with diagrams
+- **[Product Requirements](docs/PRD.md)** — Complete requirements specification
+- **[Architecture Decision Records](docs/adr/)** — Key architectural decisions with rationale
+- **[Prompts Book](docs/prompts.md)** — AI-assisted development methodology
+- **[Research Scope](docs/research_scope.md)** — Evaluation methodology
+
+---
 
 ## License
 
-This project is created for academic purposes as part of a software architecture course.
+This project is licensed under the MIT License. See `pyproject.toml` for details.
+
+---
 
 ## Author
 
-Tal Barda
+**Tal Barda**
+
+GitHub: [@TalBarda8](https://github.com/TalBarda8)
+
+---
+
+## Acknowledgments
+
+Built with:
+- **Python 3.10+**
+- **pytest** for testing
+- **pyyaml** for configuration
+- **python-dotenv** for environment management
+
+---
+
+**⭐ If you find this project useful, please consider giving it a star!**
