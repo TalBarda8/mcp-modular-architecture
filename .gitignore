@@ -50,3 +50,4 @@ Thumbs.db
 # Configuration (sensitive data)
 config/local.yaml
 config/secrets.yaml
+.env
