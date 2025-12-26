@@ -119,7 +119,7 @@ class TestMCPServer:
         assert 'version' in info
         assert info['initialized'] is True
         assert info['tool_count'] == 1
-        # Stage 3: All three MCP primitives are now supported
+        # Verify all three MCP primitives are supported
         assert info['capabilities']['tools'] is True
         assert info['capabilities']['resources'] is True
         assert info['capabilities']['prompts'] is True

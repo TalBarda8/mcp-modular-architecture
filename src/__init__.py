@@ -1,12 +1,12 @@
 """
 MCP Modular Architecture Reference Implementation.
 
-A five-stage modular architecture demonstrating professional software design principles:
-- Stage 1: Core Infrastructure (config, logging, errors)
-- Stage 2: MCP + Tools (server, tool registry, tools)
-- Stage 3: Resources + Prompts (complete MCP primitives)
-- Stage 4: Transport Layer (abstraction, STDIO, handler)
-- Stage 5: SDK + UI (client SDK, CLI)
+A clean, layered architecture demonstrating professional software design principles:
+- Core Infrastructure: Configuration, logging, and error handling
+- MCP Server: Tools, resources, and prompts with registry pattern
+- Transport Layer: Protocol-agnostic communication (STDIO, HTTP, WebSocket)
+- SDK: High-level client library for MCP integration
+- User Interface: CLI and other consumer interfaces
 """
 
 __version__ = "1.0.0"

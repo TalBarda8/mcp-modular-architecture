@@ -1,6 +1,6 @@
 """
 Example resource model demonstrating OOP principles.
-This is a simple domain model for Stage 1 demonstration.
+This is a simple domain model for demonstration purposes.
 """
 
 from typing import Any, Dict, Optional

@@ -1,6 +1,6 @@
 """
 MCP Server Bootstrap.
-MCP server implementation supporting Tools, Resources, and Prompts (Stage 3).
+MCP server implementation supporting Tools, Resources, and Prompts.
 """
 
 from typing import Any, Dict, List, Optional
@@ -19,7 +19,7 @@ from src.mcp.prompts.base_prompt import BasePrompt
 
 class MCPServer:
     """
-    MCP Server implementation for Stage 3.
+    MCP Server implementation.
 
     Provides:
     - Server initialization and configuration
@@ -28,8 +28,8 @@ class MCPServer:
     - Prompt registration and message generation
     - Server lifecycle management
 
-    Note: This is Stage 3 - Tools, Resources, and Prompts.
-    Transport layer (HTTP/SSE/STDIO) comes in Stage 4.
+    The server supports all three MCP primitives (tools, resources, prompts)
+    and communicates via pluggable transport layers (STDIO, HTTP, WebSocket).
     """
 
     def __init__(self):
@@ -359,14 +359,14 @@ class MCPServer:
         return {
             'name': self.config.get('mcp.server.name', 'MCP Server'),
             'version': self.config.get('mcp.server.version', '1.0.0'),
-            'stage': 'Stage 3 - Tools, Resources, and Prompts',
+            'description': 'MCP server with tools, resources, and prompts',
             'initialized': self._initialized,
             'tool_count': len(self.tool_registry),
             'resource_count': len(self.resource_registry),
             'prompt_count': len(self.prompt_registry),
             'capabilities': {
                 'tools': True,
-                'resources': True,   # Stage 3
-                'prompts': True      # Stage 3
+                'resources': True,
+                'prompts': True
             }
         }

@@ -15,7 +15,7 @@ class ConfigResource(BaseResource):
 
     Demonstrates:
     - Static resource (content doesn't change during runtime)
-    - Integration with Stage 1 infrastructure (ConfigManager)
+    - Integration with core infrastructure (ConfigManager)
     - Read-only data access pattern
 
     Note: This is an illustrative example demonstrating architecture.

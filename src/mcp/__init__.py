@@ -1,7 +1,7 @@
 """
-MCP Layer - Stage 2: Tools.
+MCP Server Layer.
 
-Provides MCP server functionality with tool support.
+Provides MCP server functionality with support for tools, resources, and prompts.
 """
 
 from src.mcp.server import MCPServer

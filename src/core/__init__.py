@@ -1,5 +1,5 @@
 """
-Core Infrastructure Layer - Stage 1.
+Core Infrastructure Layer.
 
 Provides foundational services for the entire application:
 - Configuration management (YAML-based, zero hard-coding)

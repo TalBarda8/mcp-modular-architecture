@@ -21,7 +21,7 @@ error_handling:
   log_errors: true
   raise_on_critical: true
 
-# Stage 2: MCP Server Configuration
+# MCP Server Configuration
 mcp:
   server:
     name: "MCP Modular Architecture Server"
