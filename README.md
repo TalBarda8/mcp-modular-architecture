@@ -1,10 +1,10 @@
-# MCP Modular Architecture - Stage 4: Transport / Communication Layer
+# MCP Modular Architecture - Stage 5: SDK and User Interface
 
 This project implements an MCP-based system as part of an academic software architecture assignment, following a structured multi-stage progression as defined in assignment8.
 
-**Current Stage: Stage 4 - Transport / Communication Layer**
+**Current Stage: Stage 5 - SDK and User Interface**
 
-This stage adds a modular transport layer that enables communication with the MCP server while keeping the MCP core completely transport-agnostic.
+This stage adds a thin SDK layer and a CLI interface that demonstrate how external consumers interact with the MCP system through the transport layer.
 
 ## Stage Progression (per assignment8)
 
@@ -47,7 +47,7 @@ Stage 3 adds Resources and Prompts while keeping Tools unchanged:
 7. **Example Prompts**: CodeReviewPrompt and SummarizePrompt
 8. **Prompt Message Generation**: Template-based message creation with arguments
 
-### Stage 4: Transport / Communication Layer ✅ Current Stage
+### Stage 4: Transport / Communication Layer ✅ Completed
 
 **Goal**: Add modular transport layer for server communication.
 
@@ -60,7 +60,20 @@ Stage 4 introduces the transport layer while keeping MCP logic transport-agnosti
 5. **Complete Decoupling**: MCP server has no knowledge of transport mechanism
 6. **Replaceable Transport**: Ability to swap transports without changing MCP code
 
-**Important**: Stage 4 focuses on the communication layer. SDK and UI are in Stage 5.
+### Stage 5: SDK and User Interface ✅ Current Stage
+
+**Goal**: Add thin SDK layer and user interface for external consumers.
+
+Stage 5 provides client-side access to MCP servers:
+
+1. **MCP Client SDK**: Thin wrapper around transport communication
+2. **High-Level Methods**: Simple API for tools, resources, and prompts
+3. **Transport-Agnostic**: SDK works with any transport implementation
+4. **CLI Interface**: Command-line interface for user interaction
+5. **SDK-Based UI**: CLI uses SDK (not MCP or transport directly)
+6. **No Business Logic**: SDK remains thin, delegating to transport/server
+
+**Important**: Stage 5 completes the full architecture stack. All stages are now implemented.
 
 ## Project Structure
 
@@ -101,10 +114,16 @@ mcp-modular-architecture/
 │   │   └── schemas/           # JSON schema definitions (Stage 2)
 │   │       └── tool_schemas.py
 │   │
-│   ├── transport/              # Transport Layer (Stage 4) **NEW**
+│   ├── transport/              # Transport Layer (Stage 4)
 │   │   ├── base_transport.py  # Abstract base transport
 │   │   ├── stdio_transport.py # STDIO transport implementation
 │   │   └── transport_handler.py # Message routing and protocol
+│   │
+│   ├── sdk/                    # SDK Layer (Stage 5) **NEW**
+│   │   └── mcp_client.py      # MCP Client SDK
+│   │
+│   ├── ui/                     # User Interface (Stage 5) **NEW**
+│   │   └── cli.py             # Command-line interface
 │   │
 │   ├── models/                 # Domain models (Illustrative - Stage 1)
 │   │   ├── base_model.py
@@ -134,9 +153,11 @@ mcp-modular-architecture/
 │   │   └── prompts/           # Stage 3 tests **NEW**
 │   │       ├── test_code_review_prompt.py
 │   │       └── test_summarize_prompt.py
-│   ├── transport/              # Stage 4 tests **NEW**
+│   ├── transport/              # Stage 4 tests
 │   │   ├── test_stdio_transport.py
 │   │   └── test_transport_handler.py
+│   ├── sdk/                    # Stage 5 tests **NEW**
+│   │   └── test_mcp_client.py
 │   ├── models/
 │   ├── services/
 │   └── utils/
@@ -415,6 +436,79 @@ Client → Transport (STDIO) → TransportHandler → MCP Server → Response
 - `prompt.list`: List available prompts
 - `prompt.get_messages`: Get prompt messages
 
+## Stage 5: SDK and UI Components
+
+### MCP Client SDK (`src/sdk/mcp_client.py`)
+
+- **MCPClient**: Thin client SDK for MCP servers (Stage 5)
+  - Wraps transport communication
+  - High-level methods for tools, resources, and prompts
+  - Transport-agnostic (works with any transport)
+  - Context manager support for connection lifecycle
+  - Request/response handling with automatic error detection
+  - No business logic duplication
+
+**SDK Methods:**
+```python
+# Server methods
+client.get_server_info()          # Get server information
+client.initialize_server()        # Initialize server
+
+# Tool methods
+client.list_tools()               # List available tools
+client.execute_tool(name, params) # Execute a tool
+
+# Resource methods
+client.list_resources()           # List available resources
+client.read_resource(uri)         # Read a resource
+
+# Prompt methods
+client.list_prompts()             # List available prompts
+client.get_prompt_messages(name, args)  # Get prompt messages
+```
+
+### CLI Interface (`src/ui/cli.py`)
+
+- **MCPCLI**: Command-line interface (Stage 5)
+  - Uses MCP Client SDK exclusively
+  - User-friendly commands for all MCP operations
+  - JSON parameter support
+  - Formatted output
+  - Error handling and logging
+
+**CLI Commands:**
+```bash
+python -m src.ui.cli info              # Show server information
+python -m src.ui.cli tools             # List tools
+python -m src.ui.cli tool <name> --params '{...}'  # Execute tool
+python -m src.ui.cli resources         # List resources
+python -m src.ui.cli resource <uri>    # Read resource
+python -m src.ui.cli prompts           # List prompts
+python -m src.ui.cli prompt <name> --args '{...}'  # Get prompt messages
+```
+
+### SDK/UI Architecture
+
+**Complete Stack Flow:**
+```
+User → CLI → SDK → Transport → Handler → MCP Server
+      ↑                                         ↓
+      ←─────────────────────────────────────────┘
+```
+
+**Layer Responsibilities:**
+1. **UI (CLI)**: User interaction and display
+2. **SDK**: High-level API wrapping transport
+3. **Transport**: Message transmission/reception
+4. **Handler**: Protocol translation
+5. **MCP Server**: Business logic execution
+
+**Key Principles:**
+- **Thin SDK**: No business logic, pure communication wrapper
+- **Clean Separation**: UI uses SDK, never transport/MCP directly
+- **Transport-Agnostic**: SDK works with STDIO, HTTP, SSE, etc.
+- **Modularity**: Each layer is independently replaceable
+
 ## Setup and Installation
 
 ### Prerequisites
@@ -601,37 +695,52 @@ This implementation follows key software architecture principles (as required by
 5. **SOLID Principles**: Especially evident in the base model abstraction and error hierarchy
 6. **Configuration Over Code**: All configurable values in YAML files, not hard-coded
 
-## Stage 2-4 Architectural Highlights
+## Stage 2-5 Architectural Highlights
 
-### How Stage 4 Builds on Stages 1-3
+### How Stage 5 Completes the Architecture
 
-1. **Zero Modification to Core**: Stage 1 infrastructure (`src/core/`) remains untouched
-2. **Zero Modification to MCP**: MCP server and primitives completely unchanged
-3. **Complete Decoupling**: Transport layer has no knowledge of MCP internals
-4. **Adapter Pattern**: TransportHandler bridges transport and MCP without coupling
-5. **Seamless Integration**: Transport uses Stage 1 services (config, logging, errors)
-6. **No Hard-coded Values**: All configuration in `config/base.yaml`
-7. **Complete Test Coverage**: 25 new tests added for Stage 4 (147 tests total, all passing)
-8. **Consistent Patterns**: Transport follows same patterns as other layers (base class, implementation)
+1. **Zero Modification to Core**: Stage 1 infrastructure completely untouched across all stages
+2. **Zero Modification to MCP**: MCP server and primitives remain unchanged
+3. **Zero Modification to Transport**: Transport layer remains independent
+4. **Thin SDK Layer**: Client SDK wraps transport without business logic duplication
+5. **Clean UI Separation**: CLI uses SDK exclusively, never transport/MCP directly
+6. **Seamless Integration**: All layers use Stage 1 services (config, logging, errors)
+7. **Complete Test Coverage**: 18 new tests added for Stage 5 (165 tests total, all passing)
+8. **Full Stack**: Complete architecture from core infrastructure to user interface
 
-### What Stage 4 Demonstrates
+### What the Complete Architecture Demonstrates
 
-**Transport Abstraction Benefits:**
-- Swap STDIO for HTTP/SSE/WebSocket without changing MCP code
-- MCP server is completely transport-agnostic
-- Transport implementations are independent and replaceable
-- Message protocol is standardized (JSON-RPC style)
+**Layered Architecture:**
+```
+Stage 5: UI (CLI) → SDK
+          ↓           ↓
+Stage 4: Transport → Handler
+          ↓           ↓
+Stage 3: ←───── MCP Server ─────→ (Tools, Resources, Prompts)
+          ↓
+Stage 1: Core Infrastructure (Config, Logging, Errors)
+```
 
-**Clean Architecture:**
-- Each layer communicates through well-defined interfaces
-- No circular dependencies between layers
-- Transport → Handler → MCP Server (one-way dependency flow)
+**Key Architectural Achievements:**
+- **Complete Decoupling**: Each layer is independent and replaceable
+- **Single Direction Flow**: Dependencies flow one way (UI → SDK → Transport → MCP → Core)
+- **No Circular Dependencies**: Clean separation enforced at every level
+- **Transport Agnostic**: Swap STDIO for HTTP/SSE without changing SDK or UI
+- **Thin Layers**: Each layer focused on single responsibility
+- **Testability**: Each layer independently testable
 
-### What Stage 4 Does NOT Include (per assignment8)
+**Flexibility Demonstrated:**
+- Replace CLI with Web UI → only UI layer changes
+- Replace STDIO with HTTP → only transport layer changes
+- Add new tool/resource/prompt → only MCP layer changes
+- Modify logging/config → only core layer changes
 
-- **No SDK**: SDK abstraction is in Stage 5
-- **No UI**: User interface is in Stage 5
-- **No Client Library**: Client-side SDK comes in Stage 5
+**SOLID Principles in Practice:**
+- **Single Responsibility**: Each layer has one clear purpose
+- **Open/Closed**: Extend via new implementations, not modifications
+- **Liskov Substitution**: All implementations interchangeable via interfaces
+- **Interface Segregation**: Thin, focused interfaces between layers
+- **Dependency Inversion**: Depend on abstractions (interfaces), not concretions
 
 ## Next Stages (per assignment8)
 
