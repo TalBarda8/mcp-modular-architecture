@@ -737,11 +737,32 @@ MCP Plugin Demo - System Extensibility
 ✓ **Clean architecture**: Uses dependency inversion (BaseTool abstraction)
 ✓ **Open/Closed Principle**: System open for extension, closed for modification
 
-**Full documentation**: See Section 9.4.3 in [docs/architecture.md](docs/architecture.md#943-concrete-plugin-example-weathertool)
+### Creating Your Own Plugins
+
+📖 **[Plugin Development Guide](examples/plugins/DEVELOPMENT_GUIDE.md)** - Comprehensive step-by-step guide
+
+This guide includes:
+- Step-by-step plugin creation tutorial
+- Required interfaces and extension points
+- Common mistakes and how to avoid them
+- Best practices for testing, naming, and registration
+- Complete working examples with code snippets
+
+**Additional documentation**:
+- Architecture details: Section 9.4.3 in [docs/architecture.md](docs/architecture.md#943-concrete-plugin-example-weathertool)
+- Example code: [examples/plugins/](examples/plugins/)
 
 ---
 
 ## Development
+
+### Plugin Development
+
+For comprehensive plugin development guidance, see:
+
+📖 **[Plugin Development Guide](examples/plugins/DEVELOPMENT_GUIDE.md)**
+
+This includes step-by-step instructions, common pitfalls, best practices, and complete examples.
 
 ### Adding a New Tool
 

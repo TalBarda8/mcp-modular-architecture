@@ -91,8 +91,22 @@ For production plugins, consider adding:
 
 But the fundamental pattern remains the same as demonstrated here.
 
+## Creating Your Own Plugin
+
+Want to build your own plugin? See the comprehensive step-by-step guide:
+
+📖 **[Plugin Development Guide](DEVELOPMENT_GUIDE.md)**
+
+This guide covers:
+- Step-by-step plugin creation
+- Required interfaces and extension points
+- Common mistakes and pitfalls
+- Best practices (testing, naming, registration)
+- Complete working examples with code snippets
+
 ## Documentation
 
 For complete documentation on the plugin architecture:
-- **Architecture**: [../../docs/architecture.md](../../docs/architecture.md) (Section 9.4.3)
-- **Main README**: [../../README.md](../../README.md) (Plugin Example section)
+- **📚 Plugin Development Guide**: [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) - Comprehensive development guide
+- **🏗️ Architecture**: [../../docs/architecture.md](../../docs/architecture.md) (Section 9.4.3)
+- **📖 Main README**: [../../README.md](../../README.md) (Plugin Example section)
