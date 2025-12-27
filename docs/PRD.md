@@ -911,6 +911,30 @@ These requirements are organized by **architectural stage** as defined in assign
 - New transports implementable via interface
 - New UIs can use SDK without modification
 
+### 9.3 Performance and Quality Metrics
+
+The project defines measurable Key Performance Indicators (KPIs) to evaluate system quality and performance. Comprehensive metrics documentation is available in:
+
+**📊 [Metrics and KPIs Dashboard](metrics_dashboard.md)**
+
+This document provides:
+- **Performance Metrics**: Tool execution response times (avg, P95), parallel processing effectiveness
+- **Reliability Metrics**: Success/failure rates, error categorization, system availability
+- **Quality Metrics**: Test coverage (95.12%), code quality scores, maintainability indicators
+- **Architectural Metrics**: Extensibility measurements, modularity scores, coupling/cohesion analysis
+
+Key experimental results:
+- **Response Times**: Simple tools < 10ms avg, parallel tools achieve 3.3-9.4× speedup
+- **Test Success Rate**: 100% (228/228 tests passing)
+- **Parallel Efficiency**: 82.5-94% for multiprocessing/multithreading
+- **Code Coverage**: 95.12% with comprehensive edge case testing
+
+Metrics are categorized as:
+- ✅ **Experimentally Measured**: Validated through test execution and benchmarks
+- 📐 **Theoretical/Conceptual**: Architectural projections based on design analysis
+
+See the full metrics dashboard for detailed KPI definitions, measurement methodologies, and performance analysis.
+
 ---
 
 ## 10. Evaluation Criteria (Per M.Sc. Guidelines)
