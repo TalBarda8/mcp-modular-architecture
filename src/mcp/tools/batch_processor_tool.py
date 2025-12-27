@@ -39,27 +39,8 @@ class BatchProcessorTool(BaseTool):
     """
     Batch processor for CPU-bound parallel processing using multiprocessing.
 
-    **Why Multiprocessing (not Threading)?**
-
-    This tool demonstrates CPU-bound parallel processing, which requires
-    multiprocessing rather than multithreading due to Python's Global
-    Interpreter Lock (GIL):
-
-    - **CPU-bound tasks**: Heavy computation that maxes out CPU cores
-      → Use multiprocessing.Pool to bypass GIL and achieve true parallelism
-
-    - **I/O-bound tasks**: Network requests, file I/O with waiting
-      → Use threading or asyncio (not relevant here)
-
-    **Use Case:**
-    Process a batch of numbers with computationally intensive operations
-    in parallel across multiple CPU cores, significantly faster than
-    sequential processing.
-
-    **Architecture Note:**
-    This tool follows the MCP architecture's extensibility principle - it's
-    a standalone module that registers via the ToolRegistry without modifying
-    core server code.
+    Uses multiprocessing.Pool (not threading) to bypass Python's GIL and achieve
+    true parallelism for CPU-intensive computations across multiple cores.
     """
 
     def _define_schema(self) -> ToolSchema:
@@ -107,19 +88,7 @@ class BatchProcessorTool(BaseTool):
         )
 
     def _execute_impl(self, params: Dict[str, Any]) -> Any:
-        """
-        Execute batch processing with multiprocessing.
-
-        Args:
-            params: Must contain 'items' (list of numbers),
-                   optional 'workers' (int)
-
-        Returns:
-            Dictionary with processed results, count, and workers used
-
-        Raises:
-            ValidationError: If items list is invalid
-        """
+        """Execute CPU-intensive batch processing with multiprocessing."""
         items = params.get('items', [])
         workers = params.get('workers', cpu_count())
 

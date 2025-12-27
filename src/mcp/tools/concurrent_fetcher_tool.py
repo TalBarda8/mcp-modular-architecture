@@ -47,55 +47,11 @@ class ConcurrentFetcherTool(BaseTool):
     """
     Concurrent fetcher for I/O-bound parallelism using multithreading.
 
-    **Why Threading (not Multiprocessing)?**
+    Uses threading (not multiprocessing) because I/O-bound tasks spend most time
+    waiting for external operations. Python releases the GIL during I/O, allowing
+    threads to run concurrently with much lower overhead than processes.
 
-    This tool demonstrates I/O-bound parallel processing, which is fundamentally
-    different from CPU-bound processing:
-
-    - **I/O-bound tasks**: Spend most time waiting for external operations
-      (network requests, file I/O, database queries)
-      → Use threading because:
-        1. Python releases the GIL during I/O operations
-        2. Threads can run concurrently while waiting for I/O
-        3. Much lower overhead than processes (shared memory space)
-        4. No serialization/pickling needed
-
-    - **CPU-bound tasks**: Spend most time doing computation
-      → Use multiprocessing (see BatchProcessorTool)
-        1. Multiprocessing bypasses GIL for true parallelism
-        2. Each process has its own Python interpreter
-
-    **Why Multiprocessing Would Be Inefficient Here:**
-
-    1. **Process overhead**: Creating processes is expensive (~10-100ms each)
-       vs threads (~1ms). For I/O tasks that already wait, this overhead dominates.
-
-    2. **Memory**: Each process duplicates memory, threads share it.
-       For I/O tasks that don't need isolation, this is wasteful.
-
-    3. **IPC cost**: Processes need serialization (pickle) for communication.
-       Threads share memory directly.
-
-    4. **Context switching**: OS switches between threads faster than processes.
-
-    **Thread Safety:**
-
-    This implementation is thread-safe without locks because:
-    - No shared mutable state between threads
-    - No global variables modified during execution
-    - Each thread processes independent data
-    - Results are collected by ThreadPoolExecutor.map() which handles synchronization
-    - Input order is preserved automatically by .map()
-
-    **Use Case:**
-    Process a list of items with I/O-bound operations (simulated network fetches,
-    file reads, API calls) concurrently, achieving significant speedup without
-    the overhead of multiprocessing.
-
-    **Architecture Note:**
-    Like BatchProcessorTool, this follows MCP's extensibility principle - it's
-    a standalone module that registers via ToolRegistry without modifying core
-    server code.
+    Thread-safe: no shared mutable state, results collected by ThreadPoolExecutor.map().
     """
 
     def _define_schema(self) -> ToolSchema:
@@ -143,19 +99,7 @@ class ConcurrentFetcherTool(BaseTool):
         )
 
     def _execute_impl(self, params: Dict[str, Any]) -> Any:
-        """
-        Execute concurrent processing with threading.
-
-        Args:
-            params: Must contain 'items' (list of strings),
-                   optional 'max_threads' (int)
-
-        Returns:
-            Dictionary with processed results, count, and threads used
-
-        Raises:
-            ValidationError: If items list is invalid
-        """
+        """Execute concurrent I/O processing with threading."""
         items = params.get('items', [])
         max_threads = params.get('max_threads', 10)
 

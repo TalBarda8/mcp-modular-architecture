@@ -50,15 +50,7 @@ class STDIOTransport(BaseTransport):
         self.logger.info("STDIO transport stopped")
 
     def send_message(self, message: Dict[str, Any]) -> None:
-        """
-        Send a message via stdout.
-
-        Args:
-            message: Message dictionary to send
-
-        The message is serialized to JSON and written to stdout
-        followed by a newline.
-        """
+        """Send a message via stdout as newline-delimited JSON."""
         try:
             json_message = json.dumps(message)
             self._output_stream.write(json_message + '\n')
@@ -70,15 +62,7 @@ class STDIOTransport(BaseTransport):
             self.error_handler.handle_error(e)
 
     def receive_message(self) -> Optional[Dict[str, Any]]:
-        """
-        Receive a message from stdin.
-
-        Returns:
-            Deserialized message dictionary, or None if no message available
-
-        Reads a line from stdin, deserializes the JSON,
-        and returns the message dictionary.
-        """
+        """Receive and deserialize a JSON message from stdin."""
         try:
             line = self._input_stream.readline()
 
@@ -106,14 +90,7 @@ class STDIOTransport(BaseTransport):
             return None
 
     def run_server(self) -> None:
-        """
-        Run the STDIO transport server loop.
-
-        Continuously reads messages from stdin, processes them,
-        and writes responses to stdout.
-
-        This method blocks until stop() is called or stdin is closed.
-        """
+        """Run the STDIO transport server loop, processing messages until stopped."""
         self.start()
         self.logger.info("STDIO server loop started")
 
@@ -140,15 +117,7 @@ class STDIOTransport(BaseTransport):
             self.logger.info("STDIO server loop ended")
 
     def send_error(self, error_message: str, error_code: str = "internal_error") -> None:
-        """
-        Send an error message.
-
-        Args:
-            error_message: Error description
-            error_code: Error code identifier
-
-        Utility method for sending error responses.
-        """
+        """Send an error response with the given message and code."""
         error_response = {
             "error": error_code,
             "message": error_message
