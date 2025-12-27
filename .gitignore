@@ -52,3 +52,19 @@ Thumbs.db
 config/local.yaml
 config/secrets.yaml
 .env
+
+# Course-related files (not for public repo)
+assignment8.pdf
+self-assessment-guide.pdf
+software_submission_guidelines.pdf
+ASSIGNMENT_VERIFICATION.md
+HARDCODED_VALUES_VERIFICATION.md
+docs/final_checklist.md
+docs/research_scope.md
+docs/PRD.md
+docs/cost_analysis.md
+docs/metrics_dashboard.md
+docs/deployment.md
+
+# IDE/Development tools
+.claude/
