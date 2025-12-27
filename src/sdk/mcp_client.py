@@ -26,11 +26,26 @@ class MCPClient:
     """
 
     def __init__(self, transport: BaseTransport):
-        """
-        Initialize MCP client.
+        """Initialize MCP client with transport layer.
+
+        Creates a transport-agnostic client that wraps low-level transport
+        communication with a high-level API. The client uses composition to
+        delegate operation methods (tools, resources, prompts) to ClientOperations
+        helper while managing transport lifecycle and request/response handling.
 
         Args:
-            transport: Transport instance to use for communication
+            transport: BaseTransport implementation (e.g., STDIOTransport, HTTPTransport).
+                Must implement send_message() and receive_message() methods.
+
+        Architectural Role:
+            Implements Facade pattern, providing simple SDK methods that hide
+            transport complexity. Enables transport swapping without changing
+            client code (Dependency Inversion Principle).
+
+        Notes:
+            - Transport must be started via connect() before sending requests
+            - Use as context manager (with statement) for automatic lifecycle management
+            - Request IDs auto-increment to enable request/response correlation
         """
         self.transport = transport
         self.logger = Logger.get_logger("MCPClient")
@@ -53,18 +68,45 @@ class MCPClient:
         method: str,
         params: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
-        """
-        Send a request and wait for response.
+        """Send request via transport and wait for response.
+
+        Core transport handling method that:
+        1. Constructs JSON-RPC style request with unique ID
+        2. Sends request through transport layer
+        3. Blocks waiting for response (synchronous)
+        4. Validates response and extracts result
+        5. Converts server errors to exceptions
 
         Args:
-            method: Method name (e.g., 'server.info', 'tool.execute')
-            params: Optional parameters dictionary
+            method: RPC method name following MCP protocol conventions
+                (e.g., 'server.info', 'tool.execute', 'resource.read')
+            params: Optional method-specific parameters as dictionary.
+                Must match server-side expectations for the method.
 
         Returns:
-            Response dictionary
+            Result dictionary extracted from successful response.
+            Structure varies by method (e.g., tool execution returns tool output,
+            server.info returns server metadata).
 
         Raises:
-            Exception: If request fails or response indicates error
+            Exception: If no response received from server (timeout or connection failure)
+            Exception: If server returns error response (with "Server error: " prefix)
+
+        Error Conditions:
+            - Transport send failure: Underlying transport exception propagated
+            - No response: Raises "No response received from server"
+            - Server error response: Extracts error message and raises with "Server error:" prefix
+            - Malformed response: Missing 'result' returns empty dict {}
+
+        Transport Protocol:
+            Request format:  {"method": str, "id": str, "params": dict (optional)}
+            Response format: {"success": bool, "result": dict | "error": dict, "id": str}
+
+        Notes:
+            - Blocking/synchronous operation (waits for complete response)
+            - Request IDs ensure response correlation (not validated here)
+            - Used by all high-level SDK methods (execute_tool, read_resource, etc.)
+            - Errors are raised (not returned), caught by calling code
         """
         request = {
             "method": method,
@@ -140,11 +182,41 @@ class MCPClient:
         return self._operations.get_prompt_messages(prompt_name, arguments)
 
     def __enter__(self):
-        """Context manager entry."""
+        """Context manager entry - establish connection.
+
+        Enables 'with' statement usage for automatic connection lifecycle:
+            with MCPClient(transport) as client:
+                client.execute_tool(...)  # Connection automatically managed
+
+        Returns:
+            self: Client instance for use within 'with' block
+
+        Notes:
+            - Calls connect() to start transport layer
+            - Connection remains open until __exit__
+            - Use for scripts/tests to ensure cleanup
+        """
         self.connect()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit."""
+        """Context manager exit - clean up connection.
+
+        Automatically called when exiting 'with' block, ensuring transport
+        cleanup even if exceptions occur within the block.
+
+        Args:
+            exc_type: Exception type if exception occurred (or None)
+            exc_val: Exception value if exception occurred (or None)
+            exc_tb: Exception traceback if exception occurred (or None)
+
+        Returns:
+            False: Exceptions are not suppressed (propagate to caller)
+
+        Notes:
+            - Calls disconnect() to stop transport layer
+            - Always executes (even on exceptions in 'with' block)
+            - Returning False allows exceptions to propagate naturally
+        """
         self.disconnect()
         return False

@@ -37,21 +37,54 @@ class TransportHandler:
         self.handlers = MessageHandlers(server)
 
     def handle_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Handle an incoming message.
+        """Handle incoming transport message and route to appropriate handler.
+
+        This is the main entry point for all transport-layer messages. Implements
+        a routing dispatcher pattern that:
+        1. Extracts method name and parameters from message
+        2. Routes to appropriate handler based on method
+        3. Wraps result in success/error response format
+        4. Provides comprehensive error handling and logging
 
         Args:
-            message: Message to process
+            message: JSON-RPC style message dictionary with structure:
+                {
+                    "method": str,  # e.g., "tool.execute", "server.info"
+                    "params": dict,  # Optional parameters (default: {})
+                    "id": Any  # Optional request ID for correlation
+                }
 
         Returns:
-            Response dictionary
+            Response dictionary with structure:
+                Success: {"success": True, "result": <data>, "id": <request_id>}
+                Error: {"success": False, "error": {"code": str, "message": str}, "id": <request_id>}
 
-        Message format (JSON-RPC style):
-        {
-            "method": "tool.execute" | "resource.read" | "prompt.get_messages" | "server.info",
-            "params": {...},
-            "id": "request_id" (optional)
-        }
+        Supported Methods:
+            - server.info: Get server metadata
+            - server.initialize: Initialize server
+            - tool.execute: Execute a registered tool
+            - tool.list: List available tools
+            - resource.read: Read a resource by URI
+            - resource.list: List available resources
+            - prompt.get_messages: Get prompt messages
+            - prompt.list: List available prompts
+
+        Error Conditions:
+            - Unknown method: Returns method_not_found error
+            - Missing required params: Handler raises ValueError, caught as internal_error
+            - Handler exception: Any exception caught and logged, returned as internal_error
+            - Malformed message: Caught by try-except, returned as internal_error
+
+        Architectural Role:
+            Acts as Adapter pattern between transport layer (STDIO, HTTP, etc.)
+            and MCP server. Decouples transport protocol from server implementation,
+            allowing transport to be swapped without changing server code.
+
+        Notes:
+            - All errors are caught and returned as error responses (never raises)
+            - Logs all requests and errors for observability
+            - Request ID preserved in response for correlation
+            - Handler methods delegate to MessageHandlers helper class
         """
         try:
             method = message.get("method")
