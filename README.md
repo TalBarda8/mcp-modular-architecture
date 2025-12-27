@@ -914,6 +914,33 @@ Additional documentation available in the `docs/` directory:
 - **[Prompts Book](docs/prompts.md)** — AI-assisted development methodology
 - **[Research Scope](docs/research_scope.md)** — Evaluation methodology
 
+### Building API Documentation
+
+The project includes automated API documentation using Sphinx. The documentation is automatically generated from docstrings in the source code.
+
+**Prerequisites:**
+```bash
+pip install sphinx sphinx-rtd-theme
+```
+
+**Build HTML documentation:**
+```bash
+sphinx-build -b html docs/ docs/_build/
+```
+
+**View the documentation:**
+```bash
+open docs/_build/index.html  # macOS
+xdg-open docs/_build/index.html  # Linux
+start docs/_build/index.html  # Windows
+```
+
+The generated documentation includes:
+- MCP Server API (server, registries, tools, resources, prompts)
+- SDK Client API (client operations and lifecycle)
+- Transport Layer API (base transport, STDIO, handlers)
+- Core Infrastructure API (config, logging, errors)
+
 ---
 
 ## License
