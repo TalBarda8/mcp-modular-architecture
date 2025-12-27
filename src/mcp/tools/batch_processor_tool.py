@@ -30,8 +30,10 @@ def _compute_intensive_operation(number: float) -> float:
     # Simulate CPU-intensive work
     result = number ** 2
     # Add some additional computation to make it more CPU-intensive
-    for i in range(1000):
-        result = (result + i * 0.0001) % 1000000
+    # Note: 1000 iterations, 0.0001 multiplier, and 1000000 modulo are
+    # simulation constants chosen to create measurable CPU load for demonstration
+    for i in range(1000):  # Simulation constant: iteration count
+        result = (result + i * 0.0001) % 1000000  # Simulation constants
     return result
 
 
