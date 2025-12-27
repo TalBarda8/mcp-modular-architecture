@@ -1,8 +1,15 @@
 # Development environment configuration
+# Overrides base.yaml settings for local development.
+# Active when APP_ENV=development (default).
 
 logging:
-  level: "DEBUG"
+  level: "DEBUG"                     # Log level: DEBUG for maximum verbosity in development
+                                     # Shows all debug messages, API calls, and internal operations
 
 error_handling:
-  include_traceback: true
-  raise_on_critical: false  # Don't crash in development
+  include_traceback: true            # Include full stack traces: true for debugging
+                                     # Helps identify exact error locations during development
+
+  raise_on_critical: false           # Don't crash on critical errors: false for development
+                                     # Allows continued testing after critical errors
+                                     # Server remains running for faster iteration

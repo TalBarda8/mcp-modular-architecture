@@ -1,10 +1,22 @@
 # Production environment configuration
+# Overrides base.yaml settings for production deployment.
+# Active when APP_ENV=production.
 
 logging:
-  level: "WARNING"
+  level: "WARNING"                   # Log level: WARNING to reduce log volume in production
+                                     # Only logs warnings, errors, and critical issues
+                                     # Improves performance by minimizing I/O operations
+
   console:
-    enabled: false  # Only log to file in production
+    enabled: false                   # Disable console logging: false for production
+                                     # Only log to file in production environments
+                                     # Prevents stdout/stderr interference with transport protocols
 
 error_handling:
-  include_traceback: false  # Don't expose internal details
-  raise_on_critical: true
+  include_traceback: false           # Hide stack traces: false for security
+                                     # Prevents exposing internal implementation details
+                                     # Reduces information leakage to clients
+
+  raise_on_critical: true            # Crash on critical errors: true for production
+                                     # Ensures failed state doesn't serve incorrect data
+                                     # Allows orchestration systems to restart cleanly

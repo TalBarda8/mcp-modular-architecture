@@ -1,34 +1,63 @@
 # Base configuration for all environments
+# This file contains default settings shared across all deployment environments.
+# Environment-specific files (development.yaml, production.yaml) override these values.
 
 app:
-  name: "MCP Modular Architecture"
-  version: "1.0.0-stage2"
-  stage: "mcp-tools"
+  name: "MCP Modular Architecture"  # Application display name used in logs and server info
+  version: "1.0.0-stage2"            # Application version for tracking releases
+  stage: "mcp-tools"                 # Current development stage identifier
 
 logging:
-  level: "INFO"
+  level: "INFO"                      # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+                                     # Controls minimum severity for logged messages
+
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+                                     # Python logging format string
+                                     # Timestamp - Logger name - Level - Message
+
   file:
-    enabled: true
-    path: "logs/app.log"
-    max_bytes: 10485760  # 10MB
-    backup_count: 5
+    enabled: true                    # Enable/disable file logging: true, false
+                                     # When false, no log files are written
+
+    path: "logs/app.log"             # Path to log file relative to project root
+                                     # Directory must exist or will be created
+
+    max_bytes: 10485760              # Max log file size in bytes before rotation (10MB)
+                                     # Files exceeding this size trigger rotation
+
+    backup_count: 5                  # Number of rotated log files to keep: 0-999
+                                     # Older files are deleted when limit exceeded
+
   console:
-    enabled: true
+    enabled: true                    # Enable/disable console logging: true, false
+                                     # When false, no output to stdout/stderr
 
 error_handling:
-  include_traceback: true
-  log_errors: true
-  raise_on_critical: true
+  include_traceback: true            # Include stack traces in error messages: true, false
+                                     # When true, full Python traceback is logged
+
+  log_errors: true                   # Log errors through logging system: true, false
+                                     # When false, errors bypass logger
+
+  raise_on_critical: true            # Raise exception on critical errors: true, false
+                                     # When true, critical errors terminate execution
 
 # MCP Server Configuration
 mcp:
   server:
-    name: "MCP Modular Architecture Server"
-    version: "2.0.0"
-    enabled: true
+    name: "MCP Modular Architecture Server"  # Server name returned in server.info
+                                              # Identifies server to MCP clients
+
+    version: "2.0.0"                 # MCP server version for client compatibility
+                                     # Follows semantic versioning (major.minor.patch)
+
+    enabled: true                    # Enable MCP server functionality: true, false
+                                     # When false, server initialization is skipped
+
   tools:
-    auto_register: true
-    available_tools:
-      - "calculator"
-      - "echo"
+    auto_register: true              # Automatically register built-in tools: true, false
+                                     # When true, tools listed below are registered on startup
+
+    available_tools:                 # List of tool names to auto-register
+      - "calculator"                 # Arithmetic operations tool
+      - "echo"                       # Message echo tool
